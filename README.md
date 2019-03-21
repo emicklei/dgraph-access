@@ -2,6 +2,8 @@
 
 This is a helper package to work with `github.com/dgraph-io/dgo`, a Go client for accessing a DGraph cluster.
 
+## finding nodes and creating edges
+
 ```
 // Create a graph with project nodes and edges to each account within that project.
 func projectsAndAccounts() {
@@ -27,5 +29,20 @@ func projectsAndAccounts() {
 		}
 	}
 	da.CommitTransaction()
+}
+```
+
+## updating the schema
+
+```
+func setSchema() {
+	dga.NewDGraphAccess(newClient()).InTransactionDo(func(da *dga.DGraphAccess) error {
+		return da.AlterSchema(`
+	name: string @index(exact) .
+	project: uid .
+	_ServiceAccount: string .
+	_Project: string .
+	`)
+	})
 }
 ```
