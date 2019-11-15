@@ -1,13 +1,14 @@
 package dga
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 
-	"github.com/dgraph-io/dgo"
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"golang.org/x/net/context"
 )
 
@@ -24,9 +25,10 @@ var (
 
 // DGraphAccess is a decorator for a dgo.Client that holds a Context and Transaction to perform queries and mutations.
 type DGraphAccess struct {
-	client *dgo.Dgraph
-	ctx    context.Context
-	txn    *dgo.Txn
+	client       *dgo.Dgraph
+	ctx          context.Context
+	txn          *dgo.Txn
+	traceEnabled bool
 }
 
 // checkState verifies that the Access can be used for a transaction (write | read only)
@@ -46,25 +48,38 @@ func (d *DGraphAccess) checkState() error {
 // NewDGraphAccess returns a new DGraphAccess using a client.
 func NewDGraphAccess(client *dgo.Dgraph) *DGraphAccess {
 	return &DGraphAccess{
-		client: client,
+		client:       client,
+		traceEnabled: false,
+	}
+}
+
+// WithTraceLogging returns a copy of DGraphAccess that will trace parts of its internals.
+func (d *DGraphAccess) WithTraceLogging() *DGraphAccess {
+	return &DGraphAccess{
+		client:       d.client,
+		txn:          d.txn,
+		ctx:          d.ctx,
+		traceEnabled: true,
 	}
 }
 
 // ForReadWrite returns a copy of DGraphAccess ready to perform mutations.
-func (d *DGraphAccess) ForReadWrite() *DGraphAccess {
+func (d *DGraphAccess) ForReadWrite(ctx context.Context) *DGraphAccess {
 	return &DGraphAccess{
-		client: d.client,
-		txn:    d.client.NewTxn(),
-		ctx:    context.Background(),
+		client:       d.client,
+		txn:          d.client.NewTxn(),
+		ctx:          ctx,
+		traceEnabled: d.traceEnabled,
 	}
 }
 
 // ForReadOnly returns a copy of DGraphAccess ready to perform read operations only.
-func (d *DGraphAccess) ForReadOnly() *DGraphAccess {
+func (d *DGraphAccess) ForReadOnly(ctx context.Context) *DGraphAccess {
 	return &DGraphAccess{
-		client: d.client,
-		txn:    d.client.NewReadOnlyTxn(),
-		ctx:    context.Background(),
+		client:       d.client,
+		txn:          d.client.NewReadOnlyTxn(),
+		ctx:          ctx,
+		traceEnabled: d.traceEnabled,
 	}
 }
 
@@ -105,8 +120,8 @@ func (d *DGraphAccess) DiscardTransaction() error {
 
 // InTransactionDo calls a function with a prepared DGraphAccess with a Write transaction.
 // Return an error if the Commit fails.
-func (d *DGraphAccess) InTransactionDo(do func(da *DGraphAccess) error) error {
-	wtx := d.ForReadWrite()
+func (d *DGraphAccess) InTransactionDo(ctx context.Context, do func(da *DGraphAccess) error) error {
+	wtx := d.ForReadWrite(ctx)
 	defer wtx.DiscardTransaction()
 	if err := do(wtx); err != nil {
 		return err
@@ -117,16 +132,23 @@ func (d *DGraphAccess) InTransactionDo(do func(da *DGraphAccess) error) error {
 // CreateEdge creates a new Edge (using an NQuad).
 // Return an error if the mutation fails.
 // Requires a DGraphAccess with a Write transaction.
-func (d *DGraphAccess) CreateEdge(subject UID, predicate string, object interface{}) error {
+func (d *DGraphAccess) CreateEdge(subject HasUID, predicate string, object interface{}) error {
 	if err := d.checkState(); err != nil {
 		return err
 	}
+	if uid, ok := object.(HasUID); ok {
+		object = uid.GetUID()
+	}
 	nq := NQuad{
-		Subject:   subject,
+		Subject:   subject.GetUID(),
 		Predicate: predicate,
 		Object:    object,
 	}
-	_, err := d.txn.Mutate(d.ctx, &api.Mutation{SetNquads: nq.Bytes()})
+	nQuads := nq.Bytes()
+	if d.traceEnabled {
+		trace(fmt.Sprintf("mutate nquad: [%s]", string(nQuads)))
+	}
+	_, err := d.txn.Mutate(d.ctx, &api.Mutation{SetNquads: nQuads})
 	return err
 }
 
@@ -137,16 +159,27 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	if err := d.checkState(); err != nil {
 		return err
 	}
+	if node.GetUID().IsZero() {
+		node.SetUID(NewUID("temp"))
+	}
 	data, err := json.Marshal(node)
 	if err != nil {
 		return err
 	}
+	if d.traceEnabled {
+		trace("JSON mutation:", string(data))
+	}
 	mu := &api.Mutation{SetJson: data}
-	assigned, err := d.txn.Mutate(d.ctx, mu)
+	resp, err := d.txn.Mutate(d.ctx, mu)
 	if err != nil {
 		return err
 	}
-	node.SetUID(StringUID(assigned.Uids["blank-0"]))
+	var first string
+	for _, uid := range resp.GetUids() {
+		first = uid
+		break
+	}
+	node.SetUID(StringUID(first))
 	return nil
 }
 
@@ -175,4 +208,13 @@ func (d *DGraphAccess) FindNodeHasEqualsString(hasPredicate, filterPredicate, va
 		return unknownUID, false
 	}
 	return findOne[0], true
+}
+
+func trace(msg ...interface{}) {
+	b := new(bytes.Buffer)
+	fmt.Fprint(b, "[dgraph-access-trace]")
+	for _, each := range msg {
+		fmt.Fprintf(b, " %v", each)
+	}
+	log.Println(b.String())
 }
