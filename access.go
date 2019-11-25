@@ -183,31 +183,33 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	return nil
 }
 
-// FindNodeHasEqualsString find the first Node that has a given predicate (hasPredicate)
-// and equals to a given string value for another predicate (filterPredicate).
-func (d *DGraphAccess) FindNodeHasEqualsString(hasPredicate, filterPredicate, value string) (UID, bool) {
-	q := fmt.Sprintf(`query findOne($param: string) {
-		findOne(func: has(%s)) @filter(eq(%s,$param)) {
+// FindNodeWithTypeAndAttribute finds a node of with dgraph.type = <typeName> and with predicateName = <value>
+func (d *DGraphAccess) FindNodeWithTypeAndPredicate(typeName, predicateName, value string) (UID, bool, error) {
+	q := fmt.Sprintf(`query FindNodeWithTypeAndPredicate {
+		q(func: type(%s)) @filter(eq(%s,%q)) {
 		  uid		  
 		}
-	  }`, hasPredicate, filterPredicate)
-	resp, err := d.txn.QueryWithVars(d.ctx, q, map[string]string{"$param": value})
-	if err != nil {
-		log.Println(err)
-		return unknownUID, false
+	  }`, typeName, predicateName, value)
+	if d.traceEnabled {
+		trace(q)
 	}
-	//{"findOne":[{"uid":"0x2718"}]}
+	resp, err := d.txn.Query(d.ctx, q)
+	if err != nil {
+		return unknownUID, false, err
+	}
+	if d.traceEnabled {
+		trace(string(resp.Json))
+	}
 	result := map[string][]UID{}
 	err = json.Unmarshal(resp.Json, &result)
 	if err != nil {
-		log.Println(err)
-		return unknownUID, false
+		return unknownUID, false, err
 	}
-	findOne := result["findOne"]
+	findOne := result["q"]
 	if len(findOne) == 0 {
-		return unknownUID, false
+		return unknownUID, false, nil
 	}
-	return findOne[0], true
+	return findOne[0], true, nil
 }
 
 func trace(msg ...interface{}) {

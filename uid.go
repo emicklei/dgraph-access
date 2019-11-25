@@ -2,6 +2,7 @@ package dga
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 )
 
@@ -58,4 +59,16 @@ func (u UID) MarshalJSON() ([]byte, error) {
 	b := new(bytes.Buffer)
 	fmt.Fprintf(b, "%q", u.NQuadString())
 	return b.Bytes(), nil
+}
+
+func (u *UID) UnmarshalJSON(data []byte) error {
+	type uid struct {
+		UID string `json:"uid"`
+	}
+	var r uid
+	if err := json.Unmarshal(data, &r); err != nil {
+		return err
+	}
+	u.Str = r.UID
+	return nil
 }
