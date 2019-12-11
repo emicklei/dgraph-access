@@ -129,10 +129,20 @@ func (d *DGraphAccess) InTransactionDo(ctx context.Context, do func(da *DGraphAc
 	return wtx.CommitTransaction()
 }
 
+// NoFacets can be used in CreateEdge for passing no facets.
+var NoFacets map[string]interface{} = nil
+
 // CreateEdge creates a new Edge (using an NQuad).
 // Return an error if the mutation fails.
 // Requires a DGraphAccess with a Write transaction.
 func (d *DGraphAccess) CreateEdge(subject HasUID, predicate string, object interface{}) error {
+	return d.CreateEdgeWithFacets(subject, predicate, object, NoFacets)
+}
+
+// CreateEdgeWithFacets creates a new Edge (using an NQuad) that has facets (can be nil or empty)
+// Return an error if the mutation fails.
+// Requires a DGraphAccess with a Write transaction.
+func (d *DGraphAccess) CreateEdgeWithFacets(subject HasUID, predicate string, object interface{}, facetsOrNil map[string]interface{}) error {
 	if err := d.checkState(); err != nil {
 		return err
 	}
@@ -143,6 +153,7 @@ func (d *DGraphAccess) CreateEdge(subject HasUID, predicate string, object inter
 		Subject:   subject.GetUID(),
 		Predicate: predicate,
 		Object:    object,
+		Facets:    facetsOrNil,
 	}
 	nQuads := nq.Bytes()
 	if d.traceEnabled {

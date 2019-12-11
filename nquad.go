@@ -79,6 +79,8 @@ func (n NQuad) Bytes() []byte {
 			var s string
 			if t, ok := v.(time.Time); ok {
 				s = t.Format(DateTimeFormat)
+			} else if q, ok := v.(string); ok {
+				s = fmt.Sprintf("%q", q)
 			} else {
 				s = fmt.Sprintf("%v", v)
 			}

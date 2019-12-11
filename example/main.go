@@ -78,7 +78,13 @@ func insertData(da *dga.DGraphAccess) error {
 	if err := da.CreateEdge(john, "isMarriedTo", jane); err != nil {
 		return err
 	}
-	if err := da.CreateEdge(jane, "isMarriedTo", john); err != nil {
+	if err := da.CreateEdgeWithFacets(jane, "isMarriedTo", john, dga.NoFacets); err != nil {
+		return err
+	}
+	props := map[string]interface{}{
+		"style": "spanish",
+	}
+	if err := da.CreateEdgeWithFacets(jane, "likesToDanceWith", john, props); err != nil {
 		return err
 	}
 	return nil
