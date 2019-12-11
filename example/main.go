@@ -56,7 +56,7 @@ func main() {
 	dac = dac.ForReadOnly(ctx)
 
 	// find using type and name
-	uid, ok, err := dac.FindNodeWithTypeAndPredicate("Person", "name", "John")
+	uid, ok, err := dac.FindWithTypeAndPredicate("Person", "name", "John")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func main() {
 	log.Println("uid:", uid)
 
 	// find using name only
-	uid, ok, err = dac.FindNodeWithPredicate("name", "John")
+	uid, ok, err = dac.FindWithPredicate("name", "John")
 	if err != nil {
 		log.Fatal(err)
 	}

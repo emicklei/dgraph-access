@@ -194,8 +194,30 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	return nil
 }
 
-// FindNodeWithTypeAndPredicate finds a node of with dgraph.type = <typeName> and with predicateName = <value>
-func (d *DGraphAccess) FindNodeWithTypeAndPredicate(typeName, predicateName, value string) (UID, bool, error) {
+// Upsert runs a mutation if the query has no results.       .
+// Return an error if the mutation fails.
+// Requires a DGraphAccess with a Write transaction.
+func (d *DGraphAccess) Upsert(query string, nQuads string) error {
+	if err := d.checkState(); err != nil {
+		return err
+	}
+	if d.traceEnabled {
+		trace(fmt.Sprintf("JSON query [%s] mutation [%s]", query, nQuads))
+	}
+	mu := &api.Mutation{SetNquads: []byte(nQuads)}
+	req := &api.Request{
+		Query:     query,
+		Mutations: []*api.Mutation{mu},
+	}
+	_, err := d.txn.Do(d.ctx, req)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// FindWithTypeAndPredicate finds the UID of a node of with dgraph.type = <typeName> and with predicateName = <value>
+func (d *DGraphAccess) FindWithTypeAndPredicate(typeName, predicateName, value string) (UID, bool, error) {
 	q := fmt.Sprintf(`query FindNodeWithTypeAndPredicate {
 		q(func: type(%s)) @filter(eq(%s,%q)) {
 		  uid		  
@@ -223,8 +245,8 @@ func (d *DGraphAccess) FindNodeWithTypeAndPredicate(typeName, predicateName, val
 	return findOne[0], true, nil
 }
 
-// FindNodeWithPredicate finds a node of with dgraph.type = <typeName> and with predicateName = <value>
-func (d *DGraphAccess) FindNodeWithPredicate(predicateName, value string) (UID, bool, error) {
+// FindWithPredicate finds the UID of a node of with dgraph.type = <typeName> and with predicateName = <value>
+func (d *DGraphAccess) FindWithPredicate(predicateName, value string) (UID, bool, error) {
 	q := fmt.Sprintf(`query FindNodeWithPredicate {
 		q(func: eq(%s,%q)) {
 		  uid	  
