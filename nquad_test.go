@@ -22,3 +22,15 @@ func TestNQuadStarStar(t *testing.T) {
 		t.Errorf("got [%v] want [%v]", got, want)
 	}
 }
+
+// https://docs.dgraph.io/mutations/#blank-nodes-and-uid
+func TestNQuadTutorial1(t *testing.T) {
+	q := NQuad{
+		Subject:   BlankUID("class"),
+		Predicate: "student",
+		Object:    BlankUID("x"),
+	}
+	if got, want := string(q.Bytes()), "_:class <student> _:x ."; got != want {
+		t.Errorf("got [%v] want [%v]", got, want)
+	}
+}

@@ -160,7 +160,7 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 		return err
 	}
 	if node.GetUID().IsZero() {
-		node.SetUID(NewUID("temp"))
+		node.SetUID(BlankUID("temp"))
 	}
 	data, err := json.Marshal(node)
 	if err != nil {

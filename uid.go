@@ -17,14 +17,14 @@ var unknownUID = UID{}
 
 // UID represents a DGraph uid which can be expressed using an integer,string or undefined value.
 type UID struct {
-	int uint64
+	intVal uint64
 	// Str is exposed for JSON marshalling. Do not use it to read/write it directly.
 	Str   string
 	blank string
 }
 
-// NewUID returns an UID with an undefined uid and a local name only valid for one write transaction.
-func NewUID(name string) UID {
+// BlankUID returns an UID with an undefined uid and a local name only valid for one write transaction.
+func BlankUID(name string) UID {
 	return UID{blank: name}
 }
 
@@ -33,24 +33,27 @@ func StringUID(s string) UID {
 	return UID{Str: s}
 }
 
+// IntegerUID returns an UID using the integer value.
 func IntegerUID(i int) UID {
-	return UID{int: uint64(i)}
+	return UID{intVal: uint64(i)}
 }
 
+// IsZero returns whether this UID is a zero value
 func (u UID) IsZero() bool {
-	return u == unknownUID || u.int == 0 && len(u.blank) == 0 && len(u.Str) == 0
+	return u == unknownUID || u.intVal == 0 && len(u.blank) == 0 && len(u.Str) == 0
 }
 
 func (u UID) String() string {
 	return fmt.Sprintf("uid(%s)", u.NQuadString())
 }
 
+// NQuadString return a string presentation for use in a NQuad.
 func (u UID) NQuadString() string {
 	if len(u.Str) > 0 {
 		return fmt.Sprintf("<%s>", u.Str)
 	}
-	if u.int > 0 {
-		return fmt.Sprintf("<0x%x>", u.int)
+	if u.intVal > 0 {
+		return fmt.Sprintf("<0x%x>", u.intVal)
 	}
 	return "_:" + u.blank
 }
