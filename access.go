@@ -194,13 +194,42 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	return nil
 }
 
-// FindNodeWithTypeAndAttribute finds a node of with dgraph.type = <typeName> and with predicateName = <value>
+// FindNodeWithTypeAndPredicate finds a node of with dgraph.type = <typeName> and with predicateName = <value>
 func (d *DGraphAccess) FindNodeWithTypeAndPredicate(typeName, predicateName, value string) (UID, bool, error) {
 	q := fmt.Sprintf(`query FindNodeWithTypeAndPredicate {
 		q(func: type(%s)) @filter(eq(%s,%q)) {
 		  uid		  
 		}
 	  }`, typeName, predicateName, value)
+	if d.traceEnabled {
+		trace(q)
+	}
+	resp, err := d.txn.Query(d.ctx, q)
+	if err != nil {
+		return unknownUID, false, err
+	}
+	if d.traceEnabled {
+		trace(string(resp.Json))
+	}
+	result := map[string][]UID{}
+	err = json.Unmarshal(resp.Json, &result)
+	if err != nil {
+		return unknownUID, false, err
+	}
+	findOne := result["q"]
+	if len(findOne) == 0 {
+		return unknownUID, false, nil
+	}
+	return findOne[0], true, nil
+}
+
+// FindNodeWithPredicate finds a node of with dgraph.type = <typeName> and with predicateName = <value>
+func (d *DGraphAccess) FindNodeWithPredicate(predicateName, value string) (UID, bool, error) {
+	q := fmt.Sprintf(`query FindNodeWithPredicate {
+		q(func: eq(%s,%q)) {
+		  uid	  
+		}
+	  }`, predicateName, value)
 	if d.traceEnabled {
 		trace(q)
 	}

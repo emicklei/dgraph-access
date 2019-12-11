@@ -56,7 +56,7 @@ func TestNQuadStringAndDateTimeFacet(t *testing.T) {
 	when, _ := time.Parse(DateTimeFormat, "2006-01-02T15:04:05")
 	q = q.WithFacet("when", when)
 	q = q.WithFacet("weapon", "light saber")
-	if got, want := string(q.Bytes()), "_:luke <loves> _:force (when=2006-01-02T15:04:05, weapon=light saber) ."; got != want {
+	if got, want := string(q.Bytes()), "_:luke <loves> _:force (when=2006-01-02T15:04:05, weapon=\"light saber\") ."; got != want {
 		t.Errorf("got [%v] want [%v]", got, want)
 	}
 }

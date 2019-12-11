@@ -32,9 +32,9 @@ func main() {
 	client := newClient()
 
 	// Warn: Cleaning up the database
-	// if err := client.Alter(ctx, &api.Operation{DropAll: true}); err != nil {
-	// 	log.Fatal(err)
-	// }
+	if err := client.Alter(ctx, &api.Operation{DropAll: true}); err != nil {
+		log.Fatal(err)
+	}
 
 	// create an accessor
 	dac := dga.NewDGraphAccess(client)
@@ -55,7 +55,19 @@ func main() {
 	// query data
 	dac = dac.ForReadOnly(ctx)
 
+	// find using type and name
 	uid, ok, err := dac.FindNodeWithTypeAndPredicate("Person", "name", "John")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if !ok {
+		log.Println("not found")
+		return
+	}
+	log.Println("uid:", uid)
+
+	// find using name only
+	uid, ok, err = dac.FindNodeWithPredicate("name", "John")
 	if err != nil {
 		log.Fatal(err)
 	}
