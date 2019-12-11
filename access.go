@@ -195,34 +195,43 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 }
 
 // Upsert runs a mutation if the query has no results.       .
-// Return an error if the mutation fails.
+// Return a map with uid (string values) or an error if the mutation fails.
 // Requires a DGraphAccess with a Write transaction.
 func (d *DGraphAccess) Upsert(query string, nQuads string) error {
 	if err := d.checkState(); err != nil {
 		return err
 	}
 	if d.traceEnabled {
-		trace(fmt.Sprintf("JSON query [%s] mutation [%s]", query, nQuads))
+		trace(fmt.Sprintf(`
+upsert {
+	%s
+	mutation {
+		set {
+			%s
+		}
+	}
+}`, query, nQuads))
 	}
 	mu := &api.Mutation{SetNquads: []byte(nQuads)}
 	req := &api.Request{
 		Query:     query,
 		Mutations: []*api.Mutation{mu},
 	}
-	_, err := d.txn.Do(d.ctx, req)
-	if err != nil {
-		return err
+	r, err := d.txn.Do(d.ctx, req)
+	if d.traceEnabled {
+		trace(fmt.Sprintf("%#v", r))
 	}
-	return nil
+	return err
 }
 
 // FindWithTypeAndPredicate finds the UID of a node of with dgraph.type = <typeName> and with predicateName = <value>
 func (d *DGraphAccess) FindWithTypeAndPredicate(typeName, predicateName, value string) (UID, bool, error) {
-	q := fmt.Sprintf(`query FindNodeWithTypeAndPredicate {
-		q(func: type(%s)) @filter(eq(%s,%q)) {
-		  uid		  
-		}
-	  }`, typeName, predicateName, value)
+	q := fmt.Sprintf(`
+query FindWithTypeAndPredicate {
+	q(func: type(%s)) @filter(eq(%s,%q)) {
+		uid		  
+	}
+}`, typeName, predicateName, value)
 	if d.traceEnabled {
 		trace(q)
 	}
@@ -247,11 +256,12 @@ func (d *DGraphAccess) FindWithTypeAndPredicate(typeName, predicateName, value s
 
 // FindWithPredicate finds the UID of a node of with dgraph.type = <typeName> and with predicateName = <value>
 func (d *DGraphAccess) FindWithPredicate(predicateName, value string) (UID, bool, error) {
-	q := fmt.Sprintf(`query FindNodeWithPredicate {
-		q(func: eq(%s,%q)) {
-		  uid	  
-		}
-	  }`, predicateName, value)
+	q := fmt.Sprintf(`
+query FindWithPredicate {
+	q(func: eq(%s,%q)) {
+		uid	  
+	}
+}`, predicateName, value)
 	if d.traceEnabled {
 		trace(q)
 	}
