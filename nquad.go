@@ -20,6 +20,16 @@ type NQuad struct {
 	Object interface{}
 }
 
+// BlankNQuad returns an NQuad value with a Blank UID subject.
+// Use BlankUID if you want the object also to be a Blank UID from a name.
+func BlankNQuad(subjectName string, predicate string, object interface{}) NQuad {
+	return NQuad{
+		Subject:   BlankUID(subjectName),
+		Predicate: predicate,
+		Object:    object,
+	}
+}
+
 // Bytes returns the mutation line.
 func (n NQuad) Bytes() []byte {
 	b := new(bytes.Buffer)
@@ -43,3 +53,6 @@ func (n NQuad) Bytes() []byte {
 	fmt.Fprintf(b, ".")
 	return b.Bytes()
 }
+
+// String returns the string version of its Bytes representation.
+func (n NQuad) String() string { return string(n.Bytes()) }
