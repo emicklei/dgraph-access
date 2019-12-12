@@ -56,3 +56,10 @@ Produces
             <0xf11168064b01135b> <died> 1998 .
         }
     }
+
+
+## example Query and Mutate using the client
+
+See [example](https://github.com/emicklei/dgraph-access/blob/master/example/main.go)
+
+© 2019, [ernestmicklei.com](http://ernestmicklei.com).  MIT License. Contributions welcome.
