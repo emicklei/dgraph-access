@@ -3,6 +3,7 @@ package dga
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -94,5 +95,11 @@ func (n NQuad) Bytes() []byte {
 	return b.Bytes()
 }
 
-// String returns the string version of its Bytes representation.
-func (n NQuad) String() string { return string(n.Bytes()) }
+// RDF returns the string version of its Bytes representation.
+func (n NQuad) RDF() string { return string(n.Bytes()) }
+
+//DEPRECATED
+func (n NQuad) String() string {
+	log.Println("DEPRECATED: NQuad.String")
+	return string(n.Bytes())
+}
