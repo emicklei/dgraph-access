@@ -27,8 +27,17 @@ var (
 type DGraphAccess struct {
 	client       *dgo.Dgraph
 	ctx          context.Context
-	txn          *dgo.Txn
+	txn          DGraphTransaction
 	traceEnabled bool
+}
+
+// DGraphTransaction exists for testing. It has only the methods this package needs from a *dgo.Txn
+type DGraphTransaction interface {
+	Mutate(ctx context.Context, mu *api.Mutation) (*api.Response, error)
+	Commit(ctx context.Context) error
+	Discard(ctx context.Context) error
+	Do(ctx context.Context, req *api.Request) (*api.Response, error)
+	Query(ctx context.Context, q string) (*api.Response, error)
 }
 
 // checkState verifies that the Access can be used for a transaction (write | read only)
@@ -197,9 +206,14 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 // Upsert runs a mutation if the query has no results.       .
 // Return a map with uid (string values) or an error if the mutation fails.
 // Requires a DGraphAccess with a Write transaction.
-func (d *DGraphAccess) Upsert(query string, nQuads string) error {
+func (d *DGraphAccess) Upsert(query string, nQuads []NQuad) error {
 	if err := d.checkState(); err != nil {
 		return err
+	}
+	b := new(bytes.Buffer)
+	for _, each := range nQuads {
+		b.Write(each.Bytes())
+		b.WriteString("\n")
 	}
 	if d.traceEnabled {
 		trace(fmt.Sprintf(`
@@ -207,12 +221,12 @@ upsert {
 	%s
 	mutation {
 		set {
-			%s
+%s
 		}
 	}
-}`, query, nQuads))
+}`, query, b.String()))
 	}
-	mu := &api.Mutation{SetNquads: []byte(nQuads)}
+	mu := &api.Mutation{SetNquads: b.Bytes()}
 	req := &api.Request{
 		Query:     query,
 		Mutations: []*api.Mutation{mu},

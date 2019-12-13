@@ -3,7 +3,6 @@ package dga
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -37,6 +36,7 @@ func BlankNQuad(subjectName string, predicate string, object interface{}) NQuad 
 	}
 }
 
+// WithFacet returns a copy with an additional facet (key=value).
 func (n NQuad) WithFacet(key string, value interface{}) NQuad {
 	f := n.Facets
 	if f == nil {
@@ -54,7 +54,7 @@ func (n NQuad) WithFacet(key string, value interface{}) NQuad {
 // Bytes returns the mutation line.
 func (n NQuad) Bytes() []byte {
 	b := new(bytes.Buffer)
-	b.WriteString(n.Subject.NQuadString())
+	b.WriteString(n.Subject.RDF())
 	if n.Predicate == Star {
 		fmt.Fprint(b, " * ")
 	} else {
@@ -67,7 +67,7 @@ func (n NQuad) Bytes() []byte {
 			fmt.Fprintf(b, "%q ", s)
 		}
 	} else if uid, ok := n.Object.(UID); ok {
-		fmt.Fprintf(b, "%s ", uid.NQuadString())
+		fmt.Fprintf(b, "%s ", uid.RDF())
 	} else {
 		fmt.Fprintf(b, "%v ", n.Object)
 	}
@@ -97,9 +97,3 @@ func (n NQuad) Bytes() []byte {
 
 // RDF returns the string version of its Bytes representation.
 func (n NQuad) RDF() string { return string(n.Bytes()) }
-
-//DEPRECATED
-func (n NQuad) String() string {
-	log.Println("DEPRECATED: NQuad.String")
-	return string(n.Bytes())
-}

@@ -1,5 +1,9 @@
 # dgraph-access
 
+[![Build Status](https://travis-ci.org/emicklei/dgraph-access.png)](https://travis-ci.org/emicklei/dgraph-access)
+[![Go Report Card](https://goreportcard.com/badge/github.com/emicklei/dgraph-access)](https://goreportcard.com/report/github.com/emicklei/dgraph-access)
+[![GoDoc](https://godoc.org/github.com/emicklei/dgraph-access?status.svg)](https://godoc.org/github.com/emicklei/dgraph-access)
+
 This is a helper package to work with `github.com/dgraph-io/dgo` (v2), a Go client for accessing a DGraph cluster.
 See the example folder for a complete program.
 
@@ -18,19 +22,23 @@ This package is under heavy development; the API and scope may change before a v
     dga.BlankUID("help")
     dga.StringUID("me")
     dga.IntegerUID(42)
+    dga.FunctionUID("v")
+    dga.NewUID("_:root")
 
 Produces
 
     _:help
-    uid<me>
+    <me>
     <0x2a>
+    uid(v)
+    _:root
 
 ## example NQuad
 
     salesCategoryID := "web1.4"
     assortmentID := 42
     nq := dga.BlankNQuad(salesCategoryID, "HAS_CATEGORY_ASSORTMENT", dga.BlankUID(assortmentID))
-    nq.String()
+    nq.RDF()
 
 Produces
 
@@ -39,7 +47,7 @@ Produces
 ## example Mutation
 
     m := Mutation{
-        Command: "delete",
+        Operation: "delete",
         NQuads: []NQuad{
             NQuad{
                 Subject:   StringUID("0xf11168064b01135b"),

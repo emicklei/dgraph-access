@@ -6,7 +6,7 @@ import (
 
 func TestDeleteMutation(t *testing.T) {
 	m := Mutation{
-		Command: "delete",
+		Operation: "delete",
 		NQuads: []NQuad{
 			NQuad{
 				Subject:   StringUID("0xf11168064b01135b"),
