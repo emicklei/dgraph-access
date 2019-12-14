@@ -23,26 +23,31 @@ type UID struct {
 }
 
 // BlankUID returns an UID with an undefined uid and a local name only valid for one write transaction.
+// .RDF() => _:name
 func BlankUID(name string) UID {
 	return UID{raw: "_:" + name}
 }
 
-// StringUID returns an UID using a string value for uid, will be printed as "<some_id>".
-func StringUID(s string) UID {
-	return UID{Str: s}
+// StringUID returns an UID using a string value for uid.
+// .RDF() => <id>
+func StringUID(id string) UID {
+	return UID{Str: id}
 }
 
-// FunctionUID returns an UID that is printed as "uid(s)".
+// FunctionUID returns an UID calling the uid function on the argument.
+// .RDF() => uid(s)
 func FunctionUID(s string) UID {
 	return UID{raw: fmt.Sprintf("uid(%s)", s)}
 }
 
-// NewUID returns an UID that is printed in RDF as is.
+// NewUID returns an UID that is printed as is.
+// .RDF() => s
 func NewUID(s string) UID {
 	return UID{raw: s}
 }
 
 // IntegerUID returns an UID using the integer value.
+// .RDF() => <0x...>
 func IntegerUID(i int) UID {
 	return UID{raw: fmt.Sprintf("<0x%x>", uint64(i))}
 }
