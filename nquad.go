@@ -68,6 +68,10 @@ func (n NQuad) Bytes() []byte {
 		}
 	} else if uid, ok := n.Object.(UID); ok {
 		fmt.Fprintf(b, "%s ", uid.RDF())
+	} else if s, ok := n.Object.(string); ok {
+		fmt.Fprintf(b, "%q ", s)
+	} else if i, ok := n.Object.(int); ok {
+		fmt.Fprintf(b, "\"%d\" ", i)
 	} else {
 		fmt.Fprintf(b, "%v ", n.Object)
 	}

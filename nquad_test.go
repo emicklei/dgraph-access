@@ -4,6 +4,13 @@ import "testing"
 
 import "time"
 
+func TestNQuadInteger(t *testing.T) {
+	q := NQuad{Subject: StringUID("0x11"), Predicate: "name", Object: 42}
+	if got, want := string(q.Bytes()), `<0x11> <name> "42" .`; got != want {
+		t.Errorf("got [%v] want [%v]", got, want)
+	}
+}
+
 func TestNQuadString(t *testing.T) {
 	q := NQuad{Subject: StringUID("0x34"), Predicate: "name", Object: "hello"}
 	if got, want := string(q.Bytes()), `<0x34> <name> "hello" .`; got != want {
