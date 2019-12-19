@@ -9,8 +9,12 @@ import (
 const (
 	// Star is used to model any predicate or any object in an NQuad.
 	Star = "*"
+
 	// DateTimeFormat is the format used by Dgraph for facet values of type dateTime.
 	DateTimeFormat = "2006-01-02T15:04:05"
+
+	// DgraphType is a reserved predicate name to refer to a type definition.
+	DgraphType = "dgraph.type"
 )
 
 // NQuad represents an RDF S P O pair.
