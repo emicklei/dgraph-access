@@ -24,5 +24,5 @@ func ExampleStringUID() {
 
 func ExampleBlankNQuad() {
 	fmt.Println(BlankNQuad("subject", "predicate", 42).RDF())
-	// Output: _:subject <predicate> 42 .
+	// Output: _:subject <predicate> "42" .
 }
