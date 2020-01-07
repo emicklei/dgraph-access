@@ -21,10 +21,13 @@ const (
 type NQuad struct {
 	// Subject is the node for which the predicate must be created/modified.
 	Subject UID
+
 	// Predicate is a known schema predicate or a Star
 	Predicate string
+
 	// Object can be a primitive value or a UID or a Star (constant)
 	Object interface{}
+
 	// Maps to string, bool, int, float and dateTime.
 	// For int and float, only 32-bit signed integers and 64-bit floats are accepted.
 	Facets map[string]interface{}

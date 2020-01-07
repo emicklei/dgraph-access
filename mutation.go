@@ -5,11 +5,12 @@ import (
 	"fmt"
 )
 
-// Mutation represents an action with multiple RDF Triples.
+// Mutation represents an action with multiple RDF Triples represented by NQuad values.
 type Mutation struct {
 	// set, delete
 	Operation string
-	NQuads    []NQuad
+	//
+	NQuads []NQuad
 }
 
 // RDF returns the string representation of the Mutation.
