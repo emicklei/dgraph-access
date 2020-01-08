@@ -63,7 +63,22 @@ func TestNQuadStringAndDateTimeFacet(t *testing.T) {
 	when, _ := time.Parse(DateTimeFormat, "2006-01-02T15:04:05")
 	q = q.WithFacet("when", when)
 	q = q.WithFacet("weapon", "light saber")
-	if got, want := string(q.Bytes()), "_:luke <loves> _:force (when=2006-01-02T15:04:05, weapon=\"light saber\") ."; got != want {
+	got := string(q.Bytes())
+	one := "_:luke <loves> _:force (when=2006-01-02T15:04:05, weapon=\"light saber\") ."
+	two := "_:luke <loves> _:force (weapon=\"light saber\", when=2006-01-02T15:04:05) ."
+	if got != one && got != two {
+		t.Error("missing or incorrect facet notation")
+	}
+}
+
+func TestNQuadWithStringStorageType(t *testing.T) {
+	q := NQuad{
+		Subject:     BlankUID("foo"),
+		Predicate:   "equals",
+		Object:      "bar",
+		StorageType: RDFString,
+	}
+	if got, want := string(q.Bytes()), "_:foo <equals> \"bar\"^^<xs:string> ."; got != want {
 		t.Errorf("got [%v] want [%v]", got, want)
 	}
 }

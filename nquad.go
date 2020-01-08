@@ -28,6 +28,11 @@ type NQuad struct {
 	// Object can be a primitive value or a UID or a Star (constant)
 	Object interface{}
 
+	// StorageType is used to optionally specify the type when storing the object
+	// see https://docs.dgraph.io/mutations/#language-and-rdf-types
+	// Example: dga.RDFString
+	StorageType RDFDatatype
+
 	// Maps to string, bool, int, float and dateTime.
 	// For int and float, only 32-bit signed integers and 64-bit floats are accepted.
 	Facets map[string]interface{}
@@ -43,6 +48,33 @@ func BlankNQuad(subjectName string, predicate string, object interface{}) NQuad 
 	}
 }
 
+// RDFDatatype is to set the StorageType of an NQuad.
+type RDFDatatype string
+
+// see https://docs.dgraph.io/mutations/#language-and-rdf-types
+const (
+	// RDFString is a RDF type
+	RDFString   = RDFDatatype("<xs:string>")
+	RDFDateTime = RDFDatatype("<xs:dateTime>")
+	RDFDate     = RDFDatatype("<xs:date>")
+	RDFInteger  = RDFDatatype("<xs:int>")
+	RDFBoolean  = RDFDatatype("<xs:boolean>")
+	RDFDouble   = RDFDatatype("<xs:double>")
+	RDFFloat    = RDFDatatype("<xs:float>")
+)
+
+// WithStorageType returns a copy with its StorageType set.
+// Use DetectStorageType(any interface{})
+func (n NQuad) WithStorageType(t RDFDatatype) NQuad {
+	return NQuad{
+		Subject:     n.Subject,
+		Predicate:   n.Predicate,
+		Object:      n.Object,
+		StorageType: t,
+		Facets:      n.Facets,
+	}
+}
+
 // WithFacet returns a copy with an additional facet (key=value).
 func (n NQuad) WithFacet(key string, value interface{}) NQuad {
 	f := n.Facets
@@ -51,10 +83,11 @@ func (n NQuad) WithFacet(key string, value interface{}) NQuad {
 	}
 	f[key] = value
 	return NQuad{
-		Subject:   n.Subject,
-		Predicate: n.Predicate,
-		Object:    n.Object,
-		Facets:    f,
+		Subject:     n.Subject,
+		Predicate:   n.Predicate,
+		Object:      n.Object,
+		StorageType: n.StorageType,
+		Facets:      f,
 	}
 }
 
@@ -69,18 +102,23 @@ func (n NQuad) Bytes() []byte {
 	}
 	if s, ok := n.Object.(string); ok {
 		if s == Star {
-			fmt.Fprint(b, "* ")
+			fmt.Fprint(b, "*")
 		} else {
-			fmt.Fprintf(b, "%q ", s)
+			fmt.Fprintf(b, "%q", s)
 		}
 	} else if uid, ok := n.Object.(UID); ok {
-		fmt.Fprintf(b, "%s ", uid.RDF())
+		fmt.Fprintf(b, "%s", uid.RDF())
 	} else if s, ok := n.Object.(string); ok {
-		fmt.Fprintf(b, "%q ", s)
+		fmt.Fprintf(b, "%q", s)
 	} else if i, ok := n.Object.(int); ok {
-		fmt.Fprintf(b, "\"%d\" ", i)
+		fmt.Fprintf(b, "\"%d\"", i)
 	} else {
-		fmt.Fprintf(b, "%v ", n.Object)
+		fmt.Fprintf(b, "%v", n.Object)
+	}
+	if len(n.StorageType) > 0 {
+		fmt.Fprintf(b, "^^%s ", n.StorageType)
+	} else {
+		fmt.Fprintf(b, " ")
 	}
 	if n.Facets != nil && len(n.Facets) > 0 {
 		fmt.Fprintf(b, "(")
