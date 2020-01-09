@@ -203,13 +203,21 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	return nil
 }
 
-// Upsert runs a mutation if the query has no results.       .
-// Return a map with uid (string values) or an error if the mutation fails.
+// Upsert runs a mutation if the query has no results.
 // Requires a DGraphAccess with a Write transaction.
 func (d *DGraphAccess) Upsert(query string, nQuads []NQuad) error {
 	if err := d.checkState(); err != nil {
 		return err
 	}
+	req := d.UpsertRequest(query, nQuads)
+	r, err := d.txn.Do(d.ctx, req)
+	if d.traceEnabled {
+		trace(fmt.Sprintf("%#v", r))
+	}
+	return err
+}
+
+func (d *DGraphAccess) UpsertRequest(query string, nQuads []NQuad) *api.Request {
 	b := new(bytes.Buffer)
 	for _, each := range nQuads {
 		b.Write(each.Bytes())
@@ -231,11 +239,7 @@ upsert {
 		Query:     query,
 		Mutations: []*api.Mutation{mu},
 	}
-	r, err := d.txn.Do(d.ctx, req)
-	if d.traceEnabled {
-		trace(fmt.Sprintf("%#v", r))
-	}
-	return err
+	return req
 }
 
 // FindWithTypeAndPredicate finds the UID of a node of with dgraph.type = <typeName> and with predicateName = <value>
