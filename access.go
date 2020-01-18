@@ -6,9 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
+	"strings"
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
+	"github.com/mitchellh/mapstructure"
 	"golang.org/x/net/context"
 )
 
@@ -242,64 +245,57 @@ upsert {
 	return req
 }
 
-// FindWithTypeAndPredicate finds the UID of a node of with dgraph.type = <typeName> and with predicateName = <value>
-func (d *DGraphAccess) FindWithTypeAndPredicate(typeName, predicateName, value string) (UID, bool, error) {
+func simpleType(result interface{}) string {
+	tokens := strings.Split(fmt.Sprintf("%T", result), ".")
+	return tokens[len(tokens)-1]
+}
+
+// FindEquals populates the result with the result of matching a predicate with a value and optionally fetching other literal predicates.
+func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value string, literalPredicates ...string) error {
 	q := fmt.Sprintf(`
 query FindWithTypeAndPredicate {
 	q(func: type(%s)) @filter(eq(%s,%q)) {
-		uid		  
+		uid	
+		DType : dgraph.type
+		%s
+		%s	  
 	}
-}`, typeName, predicateName, value)
+}`, simpleType(result), predicateName, value, predicateName, strings.Join(literalPredicates, " "))
 	if d.traceEnabled {
 		trace(q)
 	}
 	resp, err := d.txn.Query(d.ctx, q)
 	if err != nil {
-		return unknownUID, false, err
+		return errors.New("not found")
 	}
 	if d.traceEnabled {
 		trace(string(resp.Json))
 	}
-	result := map[string][]UID{}
-	err = json.Unmarshal(resp.Json, &result)
+	qresult := map[string][]interface{}{}
+	err = json.Unmarshal(resp.Json, &qresult)
 	if err != nil {
-		return unknownUID, false, err
+		return errors.New("failed to unmarshal query result")
 	}
-	findOne := result["q"]
+	findOne := qresult["q"]
 	if len(findOne) == 0 {
-		return unknownUID, false, nil
+		return errors.New("empty query result")
 	}
-	return findOne[0], true, nil
+	cfg := &mapstructure.DecoderConfig{
+		DecodeHook: mapUID,
+		Result:     result,
+	}
+	dec, err := mapstructure.NewDecoder(cfg)
+	if err != nil {
+		return err
+	}
+	return dec.Decode(findOne[0])
 }
 
-// FindWithPredicate finds the UID of a node of with dgraph.type = <typeName> and with predicateName = <value>
-func (d *DGraphAccess) FindWithPredicate(predicateName, value string) (UID, bool, error) {
-	q := fmt.Sprintf(`
-query FindWithPredicate {
-	q(func: eq(%s,%q)) {
-		uid	  
+func mapUID(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+	if t == reflect.TypeOf(unknownUID) {
+		return NewUID(data.(string)), nil
 	}
-}`, predicateName, value)
-	if d.traceEnabled {
-		trace(q)
-	}
-	resp, err := d.txn.Query(d.ctx, q)
-	if err != nil {
-		return unknownUID, false, err
-	}
-	if d.traceEnabled {
-		trace(string(resp.Json))
-	}
-	result := map[string][]UID{}
-	err = json.Unmarshal(resp.Json, &result)
-	if err != nil {
-		return unknownUID, false, err
-	}
-	findOne := result["q"]
-	if len(findOne) == 0 {
-		return unknownUID, false, nil
-	}
-	return findOne[0], true, nil
+	return data, nil
 }
 
 func trace(msg ...interface{}) {

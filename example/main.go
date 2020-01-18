@@ -12,8 +12,8 @@ import (
 
 type Person struct {
 	// dgraph
-	Uid   dga.UID `json:"uid,omitempty"`
-	DType string  `json:"dgraph.type,omitempty"`
+	Uid   dga.UID  `json:"uid,omitempty"`
+	DType []string `json:"dgraph.type,omitempty"`
 	//
 	Name    string `json:"name,omitempty"`
 	Surname string `json:"surname,omitempty"`
@@ -56,31 +56,17 @@ func main() {
 	dac = dac.ForReadOnly(ctx)
 
 	// find using type and name
-	uid, ok, err := dac.FindWithTypeAndPredicate("Person", "name", "John")
+	p := Person{}
+	err := dac.FindEquals(&p, "name", "John", "surname")
 	if err != nil {
 		log.Fatal(err)
 	}
-	if !ok {
-		log.Println("not found")
-		return
-	}
-	log.Println("uid:", uid)
-
-	// find using name only
-	uid, ok, err = dac.FindWithPredicate("name", "John")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if !ok {
-		log.Println("not found")
-		return
-	}
-	log.Println("uid:", uid)
+	log.Printf("%#v\n", p)
 }
 
 func insertData(da *dga.DGraphAccess) error {
-	john := &Person{Name: "John", Surname: "Doe", DType: "Person"}
-	jane := &Person{Name: "Jane", Surname: "Doe", DType: "Person"}
+	john := &Person{Name: "John", Surname: "Doe", DType: []string{"Person"}}
+	jane := &Person{Name: "Jane", Surname: "Doe", DType: []string{"Person"}}
 	if err := da.CreateNode(john); err != nil {
 		return err
 	}
@@ -105,6 +91,7 @@ func insertData(da *dga.DGraphAccess) error {
 func alterSchema(da *dga.DGraphAccess) error {
 	return da.AlterSchema(`
 	name: string @index(exact) .
+	surname: string .
 
 	type Person {
 		name: string
