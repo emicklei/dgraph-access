@@ -250,17 +250,17 @@ func simpleType(result interface{}) string {
 	return tokens[len(tokens)-1]
 }
 
-// FindEquals populates the result with the result of matching a predicate with a value and optionally fetching other literal predicates.
-func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value string, literalPredicates ...string) error {
+// FindEquals populates the result with the result of matching a predicate with a value.
+func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value string) error {
+	st := simpleType(result)
 	q := fmt.Sprintf(`
 query FindWithTypeAndPredicate {
 	q(func: type(%s)) @filter(eq(%s,%q)) {
 		uid	
 		DType : dgraph.type
-		%s
-		%s	  
+		expand(%s)
 	}
-}`, simpleType(result), predicateName, value, predicateName, strings.Join(literalPredicates, " "))
+}`, st, predicateName, value, st)
 	if d.traceEnabled {
 		trace(q)
 	}

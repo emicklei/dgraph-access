@@ -57,7 +57,7 @@ func main() {
 
 	// find using type and name
 	p := Person{}
-	err := dac.FindEquals(&p, "name", "John", "surname")
+	err := dac.FindEquals(&p, "name", "John")
 	if err != nil {
 		log.Fatal(err)
 	}
