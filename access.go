@@ -175,7 +175,7 @@ func (d *DGraphAccess) CreateEdgeWithFacets(subject HasUID, predicate string, ob
 	return err
 }
 
-// CreateNode creates a new Node        .
+// CreateNode creates a new Node.
 // Return an error if the mutation fails.
 // Requires a DGraphAccess with a Write transaction.
 func (d *DGraphAccess) CreateNode(node HasUID) error {
@@ -206,7 +206,7 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	return nil
 }
 
-// Upsert runs a mutation if the query has no results.
+// Upsert runs a mutation if the query yields no results.
 // Requires a DGraphAccess with a Write transaction.
 func (d *DGraphAccess) Upsert(query string, nQuads []NQuad) error {
 	if err := d.checkState(); err != nil {
@@ -250,6 +250,9 @@ func simpleType(result interface{}) string {
 	return tokens[len(tokens)-1]
 }
 
+var ErrNotFound = errors.New("node not found")
+var ErrUnmarshalQueryResult = errors.New("failed to unmarshal query result")
+
 // FindEquals populates the result with the result of matching a predicate with a value.
 func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value string) error {
 	st := simpleType(result)
@@ -266,7 +269,7 @@ query FindWithTypeAndPredicate {
 	}
 	resp, err := d.txn.Query(d.ctx, q)
 	if err != nil {
-		return errors.New("not found")
+		return ErrNotFound
 	}
 	if d.traceEnabled {
 		trace(string(resp.Json))
@@ -274,11 +277,11 @@ query FindWithTypeAndPredicate {
 	qresult := map[string][]interface{}{}
 	err = json.Unmarshal(resp.Json, &qresult)
 	if err != nil {
-		return errors.New("failed to unmarshal query result")
+		return ErrUnmarshalQueryResult
 	}
 	findOne := qresult["q"]
 	if len(findOne) == 0 {
-		return errors.New("empty query result")
+		return ErrNotFound
 	}
 	cfg := &mapstructure.DecoderConfig{
 		DecodeHook: mapUID,

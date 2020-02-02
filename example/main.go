@@ -59,7 +59,7 @@ func main() {
 	p := Person{}
 	err := dac.FindEquals(&p, "name", "John")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	log.Printf("%#v\n", p)
 }
@@ -94,8 +94,8 @@ func alterSchema(da *dga.DGraphAccess) error {
 	surname: string .
 
 	type Person {
-		name: string
-		surname: string
+		name
+		surname
 	}
 `)
 }
