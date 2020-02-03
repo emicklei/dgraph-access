@@ -1,0 +1,27 @@
+permissionsInProjects: [uid] .
+snapshot: dateTime .
+type Version {
+    permissionsInProjects
+    snapshot
+}
+
+permissions: [string] .
+groupOrUser: string .
+project: uid .
+serviceAccount: uid .
+type PermissionsInProject {
+    project
+    serviceAccount
+    groupOrUser
+    permissions
+}
+
+project_name: string .
+type Project {
+    project_name
+}
+
+serviceaccount_name: string .
+type ServiceAccount {
+    serviceaccount_name
+}

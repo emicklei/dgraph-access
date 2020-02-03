@@ -169,7 +169,7 @@ func (d *DGraphAccess) CreateEdgeWithFacets(subject HasUID, predicate string, ob
 	}
 	nQuads := nq.Bytes()
 	if d.traceEnabled {
-		trace(fmt.Sprintf("mutate nquad: [%s]", string(nQuads)))
+		trace(fmt.Sprintf("RDF mutation (nquad): [%s]", string(nQuads)))
 	}
 	_, err := d.txn.Mutate(d.ctx, &api.Mutation{SetNquads: nQuads})
 	return err
