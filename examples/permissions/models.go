@@ -16,8 +16,8 @@ type PermissionsInProject struct {
 
 type CloudIdentity struct {
 	*dga.Node `json:",inline"`
-	Group     string `json:"group"`
-	User      string `json:"user"`
+	Group     string `json:"group,omitempty"`
+	User      string `json:"user,omitempty"`
 }
 
 type Project struct {

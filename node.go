@@ -9,7 +9,7 @@ package dga
 // }
 type Node struct {
 	UID   UID      `json:"uid,omitempty"`
-	DType []string `json:"graph.dtype,omitempty"`
+	DType []string `json:"dgraph.type,omitempty"`
 }
 
 func (u *Node) SetUID(uid UID) { u.UID = uid }
@@ -22,3 +22,8 @@ func NewNode(typeNames ...string) *Node {
 		DType: typeNames,
 	}
 }
+
+// func (n *Node) UnmarshalJSON(data []byte) error {
+// 	n.SetUID(NewUID("test"))
+// 	return nil
+// }

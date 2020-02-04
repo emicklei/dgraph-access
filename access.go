@@ -6,12 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
-	"github.com/mitchellh/mapstructure"
 	"golang.org/x/net/context"
 )
 
@@ -260,7 +258,7 @@ func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value strin
 query FindWithTypeAndPredicate {
 	q(func: type(%s)) @filter(eq(%s,%q)) {
 		uid	
-		DType : dgraph.type
+		dgraph.type
 		expand(%s)
 	}
 }`, st, predicateName, value, st)
@@ -283,22 +281,11 @@ query FindWithTypeAndPredicate {
 	if len(findOne) == 0 {
 		return ErrNotFound
 	}
-	cfg := &mapstructure.DecoderConfig{
-		DecodeHook: mapUID,
-		Result:     result,
-	}
-	dec, err := mapstructure.NewDecoder(cfg)
-	if err != nil {
-		return err
-	}
-	return dec.Decode(findOne[0])
-}
-
-func mapUID(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
-	if t == reflect.TypeOf(unknownUID) {
-		return NewUID(data.(string)), nil
-	}
-	return data, nil
+	// mapstructure pkg did not work for this case
+	resultData := new(bytes.Buffer)
+	json.NewEncoder(resultData).Encode(findOne[0])
+	resultBytes := resultData.Bytes()
+	return json.NewDecoder(bytes.NewReader(resultBytes)).Decode(result)
 }
 
 func trace(msg ...interface{}) {

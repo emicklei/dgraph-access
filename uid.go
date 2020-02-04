@@ -2,7 +2,6 @@ package dga
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 )
 
@@ -79,13 +78,6 @@ func (u UID) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON is part of JSON
 func (u *UID) UnmarshalJSON(data []byte) error {
-	type uid struct {
-		UID string `json:"uid"`
-	}
-	var r uid
-	if err := json.Unmarshal(data, &r); err != nil {
-		return err
-	}
-	u.Str = r.UID
+	u.raw = string(data[1 : len(data)-1])
 	return nil
 }

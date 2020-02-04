@@ -38,10 +38,20 @@ func main() {
 	}
 
 	// query data
-	// dac = dac.ForReadOnly(ctx)
+
+	// which permissions does user(john.doe) have?
+	// Method 1: fetch first then
+	dac = dac.ForReadOnly(ctx)
+
+	john := &CloudIdentity{Node: new(dga.Node)}
+	if err := dac.FindEquals(john, "user", "john.doe"); err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%#v", john)
 }
 
 func insertData(xs *dga.DGraphAccess) error {
+	// serviceAcount(compute-default) has permission(role/editor) in project(my-project)
 	sa := ServiceAccount{
 		Node: dga.NewNode("ServiceAccount"),
 		Name: "compute-default",
@@ -70,6 +80,26 @@ func insertData(xs *dga.DGraphAccess) error {
 		return err
 	}
 	fmt.Println("permissions-in-project", pip.UID, "->", "service-account", sa.UID)
+
+	// user(john.doe) has permission(role/viewer) in project(my-project)
+	pip2 := PermissionsInProject{
+		Node:        dga.NewNode("PermissionsInProject"),
+		Permissions: []string{"role/viewer"},
+	}
+	if err := xs.CreateNode(pip2); err != nil {
+		return err
+	}
+	ci := CloudIdentity{
+		Node: dga.NewNode("CloudIdentity"),
+		User: "john.doe",
+	}
+	if err := xs.CreateNode(ci); err != nil {
+		return err
+	}
+	if err := xs.CreateEdge(pip2, "groupOrUser", ci); err != nil {
+		return err
+	}
+	fmt.Println("permissions-in-project", pip2.UID, "->", "groupOrUser", ci.UID)
 	return nil
 }
 

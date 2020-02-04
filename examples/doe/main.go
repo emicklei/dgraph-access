@@ -11,20 +11,10 @@ import (
 )
 
 type Person struct {
-	// dgraph
-	Uid   dga.UID  `json:"uid,omitempty"`
-	DType []string `json:"dgraph.type,omitempty"`
+	*dga.Node `json:",inline"`
 	//
 	Name    string `json:"name,omitempty"`
 	Surname string `json:"surname,omitempty"`
-}
-
-func (p *Person) SetUID(uid dga.UID) {
-	p.Uid = uid
-}
-
-func (p Person) GetUID() dga.UID {
-	return p.Uid
 }
 
 func main() {
@@ -61,12 +51,12 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-	log.Printf("%#v\n", p)
+	log.Println("uid:", p.UID, "name:", p.Name, "surname:", p.Surname)
 }
 
 func insertData(da *dga.DGraphAccess) error {
-	john := &Person{Name: "John", Surname: "Doe", DType: []string{"Person"}}
-	jane := &Person{Name: "Jane", Surname: "Doe", DType: []string{"Person"}}
+	john := &Person{Node: dga.NewNode("Person"), Name: "John", Surname: "Doe"}
+	jane := &Person{Node: dga.NewNode("Person"), Name: "Jane", Surname: "Doe"}
 	if err := da.CreateNode(john); err != nil {
 		return err
 	}
