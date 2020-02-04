@@ -9,6 +9,8 @@ import (
 type HasUID interface {
 	SetUID(uid UID)
 	GetUID() UID
+	SetType(typeName string)
+	GetTypes() []string
 }
 
 // unknownUID is the zero UID, uninitialized

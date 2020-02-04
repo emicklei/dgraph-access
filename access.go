@@ -183,6 +183,9 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	if node.GetUID().IsZero() {
 		node.SetUID(BlankUID("temp"))
 	}
+	if len(node.GetTypes()) == 0 {
+		node.SetType(simpleType(node))
+	}
 	data, err := json.Marshal(node)
 	if err != nil {
 		return err

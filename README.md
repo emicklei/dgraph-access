@@ -9,7 +9,7 @@ See the example folder for a complete program.
 
 ## status
 
-This package is under heavy development; the API and scope may change before a v1.0.0 release.
+This package is under development (see commits); the API and scope may change before a v1.0.0 release.
 
 ## usage
 
@@ -21,6 +21,6 @@ This package is under heavy development; the API and scope may change before a v
 
 See [documented code examples](https://godoc.org/github.com/emicklei/dgraph-access)
 
-See [example](https://github.com/emicklei/dgraph-access/blob/master/example/main.go)
+See [examples](https://github.com/emicklei/dgraph-access/blob/master/examples)
 
-© 2019, [ernestmicklei.com](http://ernestmicklei.com).  MIT License. Contributions welcome.
+© 2019-2020, [ernestmicklei.com](http://ernestmicklei.com).  MIT License. Contributions welcome.

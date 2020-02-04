@@ -7,7 +7,7 @@ import (
 )
 
 type PermissionsInProject struct {
-	*dga.Node `json:",inline"`
+	dga.Node `json:",inline"`
 	// Project        Project
 	// ServiceAccount ServiceAccount
 	// GroupOrUser    CloudIdentity
@@ -15,19 +15,19 @@ type PermissionsInProject struct {
 }
 
 type CloudIdentity struct {
-	*dga.Node `json:",inline"`
-	Group     string `json:"group,omitempty"`
-	User      string `json:"user,omitempty"`
+	dga.Node `json:",inline"`
+	Group    string `json:"group,omitempty"`
+	User     string `json:"user,omitempty"`
 }
 
 type Project struct {
-	*dga.Node `json:",inline"`
-	Name      string `json:"project_name"`
+	dga.Node `json:",inline"`
+	Name     string `json:"project_name"`
 }
 
 type ServiceAccount struct {
-	*dga.Node `json:",inline"`
-	Name      string `json:"serviceaccount_name"`
+	dga.Node `json:",inline"`
+	Name     string `json:"serviceaccount_name"`
 }
 
 type Version struct {

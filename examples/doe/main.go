@@ -11,7 +11,7 @@ import (
 )
 
 type Person struct {
-	*dga.Node `json:",inline"`
+	dga.Node `json:",inline"`
 	//
 	Name    string `json:"name,omitempty"`
 	Surname string `json:"surname,omitempty"`
@@ -55,8 +55,8 @@ func main() {
 }
 
 func insertData(da *dga.DGraphAccess) error {
-	john := &Person{Node: dga.NewNode("Person"), Name: "John", Surname: "Doe"}
-	jane := &Person{Node: dga.NewNode("Person"), Name: "Jane", Surname: "Doe"}
+	john := &Person{Name: "John", Surname: "Doe"}
+	jane := &Person{Name: "Jane", Surname: "Doe"}
 	if err := da.CreateNode(john); err != nil {
 		return err
 	}
