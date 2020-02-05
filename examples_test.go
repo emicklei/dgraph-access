@@ -26,3 +26,8 @@ func ExampleBlankNQuad() {
 	fmt.Println(BlankNQuad("subject", "predicate", 42).RDF())
 	// Output: _:subject <predicate> "42" .
 }
+
+func ExampleBlankNQuadWithOtherSubject() {
+	fmt.Println(BlankNQuad("parent-Sylvia", "children", BlankUID("child-Max")).RDF())
+	// Output: _:parent-Sylvia <children> _:child-Max .
+}
