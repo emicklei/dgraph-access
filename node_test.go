@@ -10,13 +10,12 @@ func TestEmbeddedNode(t *testing.T) {
 		Name string
 	}
 	k := new(Task)
-	hasCheck(t, k)
 	k.SetUID(BlankUID("test"))
 	k.SetType("Task")
-}
-
-func hasCheck(t *testing.T, h HasUID) {
-	if _, ok := h.(HasUID); !ok {
-		t.Error("must implement HasUID")
+	if got, want := k.GetTypes(), []string{"Task"}; len(got) != len(want) {
+		t.Errorf("got [%v] want [%v]", got, want)
+	}
+	if got, want := k.GetTypes(), []string{"Task"}; got[0] != want[0] {
+		t.Errorf("got [%v] want [%v]", got, want)
 	}
 }

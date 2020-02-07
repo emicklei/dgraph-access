@@ -31,6 +31,6 @@ type ServiceAccount struct {
 }
 
 type Version struct {
-	PermissionsInProjects []PermissionsInProject `json:"-"`
-	Snapshot              time.Time              `json:"snapshot"`
+	dga.Node `json:",inline"`
+	Snapshot time.Time `json:"snapshot"`
 }

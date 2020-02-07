@@ -71,6 +71,10 @@ func (u UID) RDF() string {
 	return fmt.Sprintf("<%s>", u.Str)
 }
 
+func (u UID) QueryFunction() string {
+	return fmt.Sprintf("uid(%s)", u.Str)
+}
+
 // MarshalJSON is part of JSON
 func (u UID) MarshalJSON() ([]byte, error) {
 	b := new(bytes.Buffer)
@@ -80,6 +84,6 @@ func (u UID) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON is part of JSON
 func (u *UID) UnmarshalJSON(data []byte) error {
-	u.raw = string(data[1 : len(data)-1])
+	u.Str = string(data[1 : len(data)-1])
 	return nil
 }

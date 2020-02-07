@@ -255,16 +255,23 @@ var ErrNotFound = errors.New("node not found")
 var ErrUnmarshalQueryResult = errors.New("failed to unmarshal query result")
 
 // FindEquals populates the result with the result of matching a predicate with a value.
-func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value string) error {
+func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value interface{}) error {
 	st := simpleType(result)
+	var valueString string
+	if s, ok := value.(string); ok {
+		valueString = fmt.Sprintf("\"%s\"", s)
+	}
+	if n, ok := value.(HasUID); ok {
+		valueString = n.GetUID().QueryFunction()
+	}
 	q := fmt.Sprintf(`
 query FindWithTypeAndPredicate {
-	q(func: type(%s)) @filter(eq(%s,%q)) {
+	q(func: type(%s)) @filter(eq(%s,%s)) {
 		uid	
 		dgraph.type
 		expand(%s)
 	}
-}`, st, predicateName, value, st)
+}`, st, predicateName, valueString, st)
 	if d.traceEnabled {
 		trace(q)
 	}

@@ -5,7 +5,7 @@
 [![GoDoc](https://godoc.org/github.com/emicklei/dgraph-access?status.svg)](https://pkg.go.dev/github.com/emicklei/dgraph-access?tab=doc)
 
 This is a helper package to work with `github.com/dgraph-io/dgo` (v2), a Go client for accessing a DGraph cluster.
-See the example folder for a complete program.
+See the examples folder for complete programs.
 
 ## status
 
@@ -13,11 +13,12 @@ This package is under development (see commits); the API and scope may change be
 
 ## motivation
 
-This package adds the following features to the standard Go client:
+This package was created to reduce the boilerplate code required to use the `raw` dgraph Go client.
+`dgraph-access` adds the following features to the standard Go client:
 
 - type UID and NQuad to create RDF triples w/o facets
 - type Node to encapsulate an uid and graph.type for your own entities
-- type DgraphAccess to handle transactions, JSON marshalling and populating entities without a lot of boilerplate
+- type DgraphAccess to handle transactions, JSON marshalling and populating entities
 - type Mutation to encapsulate a dgraph mutations that contains a list of RDF triples (NQuad values)
 
 ## usage

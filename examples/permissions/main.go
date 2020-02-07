@@ -48,6 +48,12 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Printf("%#v", john)
+
+	// TODO: does not work yet
+	pip := new(PermissionsInProject)
+	if err := dac.FindEquals(pip, "groupOrUser", john); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func insertData(xs *dga.DGraphAccess) error {
