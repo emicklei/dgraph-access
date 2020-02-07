@@ -71,8 +71,11 @@ func (u UID) RDF() string {
 	return fmt.Sprintf("<%s>", u.Str)
 }
 
-func (u UID) QueryFunction() string {
-	return fmt.Sprintf("uid(%s)", u.Str)
+// Assigned TODO
+func (u UID) Assigned() string {
+	// TODO handle raw
+	//i, _ := strconv.ParseInt(u.Str, 10, 64)
+	return u.Str
 }
 
 // MarshalJSON is part of JSON
