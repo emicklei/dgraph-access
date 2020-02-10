@@ -251,6 +251,30 @@ func simpleType(result interface{}) string {
 	return tokens[len(tokens)-1]
 }
 
+// RunQuery executes the raw query and populates the result with the data found using a given key.
+func (d *DGraphAccess) RunQuery(result interface{}, query string, dataKey string) error {
+	resp, err := d.txn.Query(d.ctx, query)
+	if err != nil {
+		// TODO check error
+		log.Println(err)
+		return ErrNotFound
+	}
+	qresult := map[string][]interface{}{}
+	err = json.Unmarshal(resp.Json, &qresult)
+	if err != nil {
+		return ErrUnmarshalQueryResult
+	}
+	findOne := qresult[dataKey]
+	if len(findOne) == 0 {
+		return ErrNotFound
+	}
+	// mapstructure pkg did not work for this case
+	resultData := new(bytes.Buffer)
+	json.NewEncoder(resultData).Encode(findOne[0])
+	resultBytes := resultData.Bytes()
+	return json.NewDecoder(bytes.NewReader(resultBytes)).Decode(result)
+}
+
 var ErrNotFound = errors.New("node not found")
 var ErrUnmarshalQueryResult = errors.New("failed to unmarshal query result")
 

@@ -40,7 +40,7 @@ func main() {
 	// query data
 
 	// which permissions does user(john.doe) have?
-	// Method 1: fetch first then
+	// Method 1: find john then find its permissions
 	dac = dac.ForReadOnly(ctx)
 
 	john := new(CloudIdentity)
@@ -49,11 +49,25 @@ func main() {
 	}
 	log.Printf("%#v", john)
 
-	// TODO: does not work yet
 	pip := new(PermissionsInProject)
 	if err := dac.FindEquals(pip, "groupOrUser", john); err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("%#v", pip)
+
+	// which permissions does user(john.doe) have?
+	// Method 2: find permissions filtering groupOrUser predicate
+	query := `{
+		q(func: type(PermissionsInProject)) @cascade {
+				groupOrUser @filter(eq(user,"john.doe"))
+				permissions
+		}
+	  }`
+	data := map[string][]string{}
+	if err := dac.RunQuery(&data, query, "q"); err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%#v", data["permissions"])
 }
 
 func insertData(xs *dga.DGraphAccess) error {
