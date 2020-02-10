@@ -22,6 +22,12 @@ var (
 
 	// ErrNoContext is a DGraphAccess state error
 	ErrNoContext = errors.New("dgo transaction context not created")
+
+	// ErrNotFound is returned from FindEquals when no node matches.
+	ErrNotFound = errors.New("node not found")
+
+	// ErrUnmarshalQueryResult is returned when the result of a query cannot be unmarshalled from JSON
+	ErrUnmarshalQueryResult = errors.New("failed to unmarshal query result")
 )
 
 // DGraphAccess is a decorator for a dgo.Client that holds a Context and Transaction to perform queries and mutations.
@@ -61,6 +67,17 @@ func NewDGraphAccess(client *dgo.Dgraph) *DGraphAccess {
 		client:       client,
 		traceEnabled: false,
 	}
+}
+
+// Transaction returns the encapsulated transaction (if present).
+func (d *DGraphAccess) Transaction() *dgo.Txn {
+	if d.txn == nil {
+		return nil
+	}
+	if nonMock, ok := d.txn.(*dgo.Txn); ok {
+		return nonMock
+	}
+	return nil
 }
 
 // WithTraceLogging returns a copy of DGraphAccess that will trace parts of its internals.
@@ -104,10 +121,10 @@ func (d *DGraphAccess) AlterSchema(source string) error {
 	return d.client.Alter(d.ctx, op)
 }
 
-// CommitTransaction completes the current transaction.
+// Commit completes the current transaction.
 // Return an error if the DGraphAccess is in the wrong state or if the Commit fails.
 // Requires a DGraphAccess with a Write transaction.
-func (d *DGraphAccess) CommitTransaction() error {
+func (d *DGraphAccess) Commit() error {
 	if err := d.checkState(); err != nil {
 		return err
 	}
@@ -117,8 +134,8 @@ func (d *DGraphAccess) CommitTransaction() error {
 	return t.Commit(c)
 }
 
-// DiscardTransaction aborts the current transaction (unless absent).
-func (d *DGraphAccess) DiscardTransaction() error {
+// Discard aborts the current transaction (unless absent).
+func (d *DGraphAccess) Discard() error {
 	if d.txn != nil && d.ctx != nil {
 		err := d.txn.Discard(d.ctx)
 		d.txn = nil
@@ -129,14 +146,15 @@ func (d *DGraphAccess) DiscardTransaction() error {
 }
 
 // InTransactionDo calls a function with a prepared DGraphAccess with a Write transaction.
+// The encapsulated transaction is available from the receiver using Transaction().
 // Return an error if the Commit fails.
 func (d *DGraphAccess) InTransactionDo(ctx context.Context, do func(da *DGraphAccess) error) error {
 	wtx := d.ForReadWrite(ctx)
-	defer wtx.DiscardTransaction()
+	defer wtx.Discard()
 	if err := do(wtx); err != nil {
 		return err
 	}
-	return wtx.CommitTransaction()
+	return wtx.Commit()
 }
 
 // NoFacets can be used in CreateEdge for passing no facets.
@@ -207,45 +225,6 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	return nil
 }
 
-// Upsert runs a mutation if the query yields no results.
-// Requires a DGraphAccess with a Write transaction.
-func (d *DGraphAccess) Upsert(query string, nQuads []NQuad) error {
-	if err := d.checkState(); err != nil {
-		return err
-	}
-	req := d.UpsertRequest(query, nQuads)
-	r, err := d.txn.Do(d.ctx, req)
-	if d.traceEnabled {
-		trace(fmt.Sprintf("%#v", r))
-	}
-	return err
-}
-
-func (d *DGraphAccess) UpsertRequest(query string, nQuads []NQuad) *api.Request {
-	b := new(bytes.Buffer)
-	for _, each := range nQuads {
-		b.Write(each.Bytes())
-		b.WriteString("\n")
-	}
-	if d.traceEnabled {
-		trace(fmt.Sprintf(`
-upsert {
-	%s
-	mutation {
-		set {
-%s
-		}
-	}
-}`, query, b.String()))
-	}
-	mu := &api.Mutation{SetNquads: b.Bytes()}
-	req := &api.Request{
-		Query:     query,
-		Mutations: []*api.Mutation{mu},
-	}
-	return req
-}
-
 func simpleType(result interface{}) string {
 	tokens := strings.Split(fmt.Sprintf("%T", result), ".")
 	return tokens[len(tokens)-1]
@@ -274,9 +253,6 @@ func (d *DGraphAccess) RunQuery(result interface{}, query string, dataKey string
 	resultBytes := resultData.Bytes()
 	return json.NewDecoder(bytes.NewReader(resultBytes)).Decode(result)
 }
-
-var ErrNotFound = errors.New("node not found")
-var ErrUnmarshalQueryResult = errors.New("failed to unmarshal query result")
 
 // FindEquals populates the result with the result of matching a predicate with a value.
 func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value interface{}) error {
