@@ -23,8 +23,8 @@ var (
 	// ErrNoContext is a DGraphAccess state error
 	ErrNoContext = errors.New("dgo transaction context not created")
 
-	// ErrNotFound is returned from FindEquals when no node matches.
-	ErrNotFound = errors.New("node not found")
+	// ErrNoResultsFound is returned from FindEquals when no node matches.
+	ErrNoResultsFound = errors.New("no results found")
 
 	// ErrUnmarshalQueryResult is returned when the result of a query cannot be unmarshalled from JSON
 	ErrUnmarshalQueryResult = errors.New("failed to unmarshal query result")
@@ -232,11 +232,17 @@ func simpleType(result interface{}) string {
 
 // RunQuery executes the raw query and populates the result with the data found using a given key.
 func (d *DGraphAccess) RunQuery(result interface{}, query string, dataKey string) error {
+	if d.traceEnabled {
+		trace(query)
+	}
 	resp, err := d.txn.Query(d.ctx, query)
 	if err != nil {
 		// TODO check error
 		log.Println(err)
-		return ErrNotFound
+		return ErrNoResultsFound
+	}
+	if d.traceEnabled {
+		trace(string(resp.Json))
 	}
 	qresult := map[string][]interface{}{}
 	err = json.Unmarshal(resp.Json, &qresult)
@@ -245,7 +251,7 @@ func (d *DGraphAccess) RunQuery(result interface{}, query string, dataKey string
 	}
 	findOne := qresult[dataKey]
 	if len(findOne) == 0 {
-		return ErrNotFound
+		return ErrNoResultsFound
 	}
 	// mapstructure pkg did not work for this case
 	resultData := new(bytes.Buffer)
@@ -260,9 +266,10 @@ func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value inter
 	var filterContent string
 	if s, ok := value.(string); ok {
 		filterContent = fmt.Sprintf("eq(%s,%q)", predicateName, s)
-	}
-	if n, ok := value.(HasUID); ok {
+	} else if n, ok := value.(HasUID); ok {
 		filterContent = fmt.Sprintf("uid_in(%s,%s)", predicateName, n.GetUID().Assigned())
+	} else if u, ok := value.(UID); ok {
+		filterContent = fmt.Sprintf("uid_in(%s,%s)", predicateName, u.Assigned())
 	}
 	q := fmt.Sprintf(`
 query FindWithTypeAndPredicate {
@@ -279,7 +286,7 @@ query FindWithTypeAndPredicate {
 	if err != nil {
 		// TODO check error
 		log.Println(err)
-		return ErrNotFound
+		return ErrNoResultsFound
 	}
 	if d.traceEnabled {
 		trace(string(resp.Json))
@@ -291,7 +298,7 @@ query FindWithTypeAndPredicate {
 	}
 	findOne := qresult["q"]
 	if len(findOne) == 0 {
-		return ErrNotFound
+		return ErrNoResultsFound
 	}
 	// mapstructure pkg did not work for this case
 	resultData := new(bytes.Buffer)

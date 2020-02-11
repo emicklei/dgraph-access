@@ -53,7 +53,15 @@ func main() {
 	if err := dac.FindEquals(pip, "groupOrUser", john); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%#v", pip)
+	log.Printf("(with node) %#v", pip)
+
+	{ // if you only have the uid of John
+		pip := new(PermissionsInProject)
+		if err := dac.FindEquals(pip, "groupOrUser", john.UID); err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("(uid only) %#v", pip)
+	}
 
 	// which permissions does user(john.doe) have?
 	// Method 2: find permissions filtering groupOrUser predicate
@@ -67,7 +75,20 @@ func main() {
 	if err := dac.RunQuery(&data, query, "q"); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%#v", data["permissions"])
+	log.Printf("(filter predicate) %#v", data["permissions"])
+
+	// for which projects has service account (compute-default) permissions (role/editor) ?
+	query = `{
+		q(func: type(PermissionsInProject)) @cascade {
+				serviceAccount @filter(eq(serviceaccount_name,"compute-default"))
+				permissions
+		}
+	  }`
+	data = map[string][]string{}
+	if err := dac.RunQuery(&data, query, "q"); err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("(filter account and permissions) %#v", data["permissions"])
 }
 
 func insertData(xs *dga.DGraphAccess) error {
