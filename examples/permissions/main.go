@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -12,13 +13,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+var drop = flag.Bool("drop", false, "cleanup the database at startup")
+
 func main() {
+	flag.Parse()
 	ctx := context.Background()
 	client := newClient()
 
-	// Warn: Cleaning up the database
-	if err := client.Alter(ctx, &api.Operation{DropAll: true}); err != nil {
-		log.Fatal("drop all failed ", err)
+	if *drop {
+		log.Println("Cleaning up the database")
+		if err := client.Alter(ctx, &api.Operation{DropAll: true}); err != nil {
+			log.Fatal("drop all failed ", err)
+		}
 	}
 
 	// create an accessor
@@ -39,7 +45,7 @@ func main() {
 
 	// query data
 
-	// which permissions does user(john.doe) have?
+	// which permissions does user [john.doe] have?
 	// Method 1: find john then find its permissions
 	dac = dac.ForReadOnly(ctx)
 
@@ -63,7 +69,7 @@ func main() {
 		log.Printf("(uid only) %#v", pip)
 	}
 
-	// which permissions does user(john.doe) have?
+	// which permissions does user [john.doe] have?
 	// Method 2: find permissions filtering groupOrUser predicate
 	query := `{
 		q(func: type(PermissionsInProject)) @cascade {
@@ -77,18 +83,20 @@ func main() {
 	}
 	log.Printf("(filter predicate) %#v", data["permissions"])
 
-	// for which projects has service account (compute-default) permissions (role/editor) ?
+	// for which projects has service account [compute-default] permissions [role/editor] ?
 	query = `{
-		q(func: type(PermissionsInProject)) @cascade {
-				serviceAccount @filter(eq(serviceaccount_name,"compute-default"))
-				permissions
+		q(func: type(PermissionsInProject)) @filter(eq(permissions,"role/editor")) {
+			serviceAccount @filter(eq(serviceaccount_name,"compute-default"))
+			project {                          
+				project_name
+			}
 		}
 	  }`
-	data = map[string][]string{}
-	if err := dac.RunQuery(&data, query, "q"); err != nil {
+	data2 := map[string]interface{}{}
+	if err := dac.RunQuery(&data2, query, "q"); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("(filter account and permissions) %#v", data["permissions"])
+	log.Printf("(filter account and permissions) %#v", data2["project"])
 }
 
 func insertData(xs *dga.DGraphAccess) error {
@@ -118,6 +126,11 @@ func insertData(xs *dga.DGraphAccess) error {
 		return err
 	}
 	fmt.Println("permissions-in-project", pip.UID, "->", "service-account", sa.UID)
+
+	if err := xs.CreateEdge(pip, "project", pr); err != nil {
+		return err
+	}
+	fmt.Println("permissions-in-project", pip.UID, "->", "project", pr.UID)
 
 	// user(john.doe) has permission(role/viewer) in project(my-project)
 	pip2 := &PermissionsInProject{
