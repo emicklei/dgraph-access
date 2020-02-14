@@ -270,6 +270,9 @@ func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value inter
 		filterContent = fmt.Sprintf("uid_in(%s,%s)", predicateName, n.GetUID().Assigned())
 	} else if u, ok := value.(UID); ok {
 		filterContent = fmt.Sprintf("uid_in(%s,%s)", predicateName, u.Assigned())
+	} else {
+		// unhandled type, TODO
+		filterContent = fmt.Sprintf("eq(%s,%v)", predicateName, s)
 	}
 	q := fmt.Sprintf(`
 query FindWithTypeAndPredicate {

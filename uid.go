@@ -58,12 +58,12 @@ func (u UID) IsZero() bool {
 	return u == unknownUID || len(u.Str) == 0 && len(u.raw) == 0
 }
 
-// String is for debugging only
+// String is for debugging only. Eg. UID(<0x13>)
 func (u UID) String() string {
 	return fmt.Sprintf("UID(%s)", u.RDF())
 }
 
-// RDF returns a string presentation for use in an NQuad.
+// RDF returns a string presentation for use in an NQuad. Eg. <0x12>
 func (u UID) RDF() string {
 	if len(u.raw) > 0 {
 		return u.raw
