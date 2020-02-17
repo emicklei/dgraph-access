@@ -35,12 +35,6 @@ func StringUID(id string) UID {
 	return UID{Str: id}
 }
 
-// FunctionUID returns an UID calling the uid function on the argument.
-// .RDF() => uid(s)
-func FunctionUID(s string) UID {
-	return UID{raw: fmt.Sprintf("uid(%s)", s)}
-}
-
 // NewUID returns an UID that is printed as is.
 // .RDF() => s
 func NewUID(s string) UID {
@@ -71,10 +65,13 @@ func (u UID) RDF() string {
 	return fmt.Sprintf("<%s>", u.Str)
 }
 
-// Assigned TODO
+// Assigned is the actual by DGraph assigned id number as string.
+// Also, returns the string part enclosed in <..>.
+//  TODO not sure about the name
 func (u UID) Assigned() string {
-	// TODO handle raw
-	//i, _ := strconv.ParseInt(u.Str, 10, 64)
+	if len(u.raw) > 0 {
+		return u.raw[1 : len(u.raw)-1]
+	}
 	return u.Str
 }
 

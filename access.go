@@ -254,6 +254,7 @@ func (d *DGraphAccess) RunQuery(result interface{}, query string, dataKey string
 		return ErrNoResultsFound
 	}
 	// mapstructure pkg did not work for this case
+	// TODO optimize this
 	resultData := new(bytes.Buffer)
 	json.NewEncoder(resultData).Encode(findOne[0])
 	resultBytes := resultData.Bytes()
@@ -304,6 +305,7 @@ query FindWithTypeAndPredicate {
 		return ErrNoResultsFound
 	}
 	// mapstructure pkg did not work for this case
+	// TODO optimize this
 	resultData := new(bytes.Buffer)
 	json.NewEncoder(resultData).Encode(findOne[0])
 	resultBytes := resultData.Bytes()

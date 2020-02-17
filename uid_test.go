@@ -24,8 +24,8 @@ func TestIntegerUID(t *testing.T) {
 	}
 }
 
-func TestFunctionUID(t *testing.T) {
-	if got, want := FunctionUID("v").RDF(), "uid(v)"; got != want {
+func TestAssigned(t *testing.T) {
+	if got, want := IntegerUID(42).Assigned(), "0x2a"; got != want {
 		t.Errorf("got [%v] want [%v]", got, want)
 	}
 }

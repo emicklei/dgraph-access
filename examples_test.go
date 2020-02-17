@@ -12,11 +12,6 @@ func ExampleIntegerUID() {
 	// Output: <0x2a>
 }
 
-func ExampleFunctionUID() {
-	fmt.Println(FunctionUID("v").RDF())
-	// Output: uid(v)
-}
-
 func ExampleStringUID() {
 	fmt.Println(StringUID("name").RDF())
 	// Output: <name>
@@ -27,7 +22,7 @@ func ExampleBlankNQuad() {
 	// Output: _:subject <predicate> "42" .
 }
 
-func ExampleBlankNQuadWithOtherSubject() {
+func ExampleBlankNQuad_2() {
 	fmt.Println(BlankNQuad("parent-Sylvia", "children", BlankUID("child-Max")).RDF())
 	// Output: _:parent-Sylvia <children> _:child-Max .
 }
