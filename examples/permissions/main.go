@@ -56,14 +56,14 @@ func main() {
 	log.Printf("%#v", john)
 
 	pip := new(PermissionsInProject)
-	if err := dac.FindEquals(pip, "groupOrUser", john); err != nil {
+	if err := dac.FindEquals(pip, "identity", john); err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("(with node) %#v", pip)
 
 	{ // if you only have the uid of John
 		pip := new(PermissionsInProject)
-		if err := dac.FindEquals(pip, "groupOrUser", john.UID); err != nil {
+		if err := dac.FindEquals(pip, "identity", john.UID); err != nil {
 			log.Fatal(err)
 		}
 		log.Printf("(uid only) %#v", pip)
@@ -73,7 +73,7 @@ func main() {
 	// Method 2: find permissions filtering groupOrUser predicate
 	query := `{
 		q(func: type(PermissionsInProject)) @cascade {
-				groupOrUser @filter(eq(user,"john.doe"))
+				identity @filter(eq(user,"john.doe"))
 				permissions
 		}
 	  }`
@@ -86,7 +86,7 @@ func main() {
 	// for which projects has service account [compute-default] permissions [role/editor] ?
 	query = `{
 		q(func: type(PermissionsInProject)) @filter(eq(permissions,"role/editor")) {
-			serviceAccount @filter(eq(serviceaccount_name,"compute-default"))
+			identity @filter(eq(serviceAccount,"compute-default"))
 			project {                          
 				project_name
 			}
@@ -101,8 +101,8 @@ func main() {
 
 func insertData(xs *dga.DGraphAccess) error {
 	// serviceAcount(compute-default) has permission(role/editor) in project(my-project)
-	sa := &ServiceAccount{
-		Name: "compute-default",
+	sa := &CloudIdentity{
+		ServiceAccount: "compute-default",
 	}
 	if err := xs.CreateNode(sa); err != nil {
 		return err
@@ -122,10 +122,10 @@ func insertData(xs *dga.DGraphAccess) error {
 		return err
 	}
 	fmt.Println("permissions-in-project:", pip.UID)
-	if err := xs.CreateEdge(pip, "serviceAccount", sa); err != nil {
+	if err := xs.CreateEdge(pip, "identity", sa); err != nil {
 		return err
 	}
-	fmt.Println("permissions-in-project", pip.UID, "->", "service-account", sa.UID)
+	fmt.Println("permissions-in-project", pip.UID, "->", "serviceAccount", sa.UID)
 
 	if err := xs.CreateEdge(pip, "project", pr); err != nil {
 		return err
@@ -145,10 +145,15 @@ func insertData(xs *dga.DGraphAccess) error {
 	if err := xs.CreateNode(ci); err != nil {
 		return err
 	}
-	if err := xs.CreateEdge(pip2, "groupOrUser", ci); err != nil {
+	if err := xs.CreateEdge(pip2, "identity", ci); err != nil {
 		return err
 	}
-	fmt.Println("permissions-in-project", pip2.UID, "->", "groupOrUser", ci.UID)
+	fmt.Println("permissions-in-project", pip2.UID, "->", "user", ci.UID)
+
+	if err := xs.CreateEdge(pip2, "project", pr); err != nil {
+		return err
+	}
+	fmt.Println("permissions-in-project", pip2.UID, "->", "project", pr.UID)
 	return nil
 }
 

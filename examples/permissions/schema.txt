@@ -6,13 +6,11 @@ type Version {
 }
 
 permissions: [string] .
-groupOrUser: uid .
+identity: uid .
 project: uid .
-serviceAccount: uid .
 type PermissionsInProject {
-    project
-    serviceAccount
-    groupOrUser
+    project    
+    identity
     permissions
 }
 
@@ -21,14 +19,11 @@ type Project {
     project_name
 }
 
-serviceaccount_name: string .
-type ServiceAccount {
-    serviceaccount_name
-}
-
 group: string .
 user: string .
+serviceAccount: string .
 type CloudIdentity {
     user
     group
+    serviceAccount
 }

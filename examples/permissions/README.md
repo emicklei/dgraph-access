@@ -1,4 +1,4 @@
-# Google Cloud Platform Permissions
+# Cloud Project Permissions
 
 ## run dgraph local
 
