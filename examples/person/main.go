@@ -21,6 +21,7 @@ type Person struct {
 var drop = flag.Bool("drop", false, "cleanup the database at startup")
 
 func main() {
+	flag.Parse()
 	ctx := context.Background()
 	client := newClient()
 
@@ -57,6 +58,15 @@ func main() {
 		log.Println(err)
 	}
 	log.Println("uid:", p.UID, "name:", p.Name, "surname:", p.Surname)
+
+	// create Jack if missing
+	dac = dac.ForReadWrite(ctx)
+	jack := &Person{Name: "Jack", Surname: "Doe"}
+	err = dac.CreateNodeIfAbsent(jack, "name", jack.Name)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println("uid:", jack.UID, "name:", jack.Name, "surname:", jack.Surname)
 }
 
 func insertData(da *dga.DGraphAccess) error {

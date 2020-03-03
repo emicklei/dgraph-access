@@ -239,6 +239,46 @@ func (d *DGraphAccess) CreateNode(node HasUID) error {
 	return nil
 }
 
+// CreateNodeIfAbsent creates a new Node only if no match is found for a node of the same type and a given predicate->object.
+// Return an error if the mutation fails. Requires a DGraphAccess with a Write transaction.
+func (d *DGraphAccess) CreateNodeIfAbsent(node HasUID, predicateName, value interface{}) error {
+	// TODO check uid of node
+	node.SetUID(BlankUID("temp"))
+	if len(node.GetTypes()) == 0 {
+		node.SetType(simpleType(node))
+	}
+	data, err := json.Marshal(node)
+	if err != nil {
+		return err
+	}
+	mu := &api.Mutation{
+		Cond:    `@if(eq(len(node), 0))`,
+		SetJson: data,
+	}
+	dtype := node.GetTypes()[0]
+	query := fmt.Sprintf("query {node as var(func: type(%s)) @filter(%s)}", dtype, findFilterContent(predicateName, value))
+	if d.traceEnabled {
+		trace("CreateNodeIfAbsent query:", query)
+		trace("CreateNodeIfAbsent cond:", mu.Cond)
+		trace("CreateNodeIfAbsent JSON:", string(data))
+	}
+	req := &api.Request{
+		Query:     query,
+		Mutations: []*api.Mutation{mu},
+	}
+	resp, err := d.txn.Do(d.ctx, req)
+	if err != nil {
+		return err
+	}
+	var first string
+	for _, uid := range resp.GetUids() {
+		first = uid
+		break
+	}
+	node.SetUID(StringUID(first))
+	return nil
+}
+
 func simpleType(result interface{}) string {
 	tokens := strings.Split(fmt.Sprintf("%T", result), ".")
 	return tokens[len(tokens)-1]
@@ -275,10 +315,7 @@ func (d *DGraphAccess) RunQuery(result interface{}, query string, dataKey string
 	return json.NewDecoder(bytes.NewReader(resultBytes)).Decode(result)
 }
 
-// FindEquals populates the result with the result of matching a predicate with a value.
-func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value interface{}) error {
-	st := simpleType(result)
-	var filterContent string
+func findFilterContent(predicateName, value interface{}) (filterContent string) {
 	if s, ok := value.(string); ok {
 		filterContent = fmt.Sprintf("eq(%s,%q)", predicateName, s)
 	} else if n, ok := value.(HasUID); ok {
@@ -289,6 +326,13 @@ func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value inter
 		// unhandled type, TODO
 		filterContent = fmt.Sprintf("eq(%s,%v)", predicateName, s)
 	}
+	return filterContent
+}
+
+// FindEquals populates the result with the result of matching a predicate with a value.
+func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value interface{}) error {
+	st := simpleType(result)
+	filterContent := findFilterContent(predicateName, value)
 	q := fmt.Sprintf(`
 query FindWithTypeAndPredicate {
 	q(func: type(%s)) @filter(%s) {
