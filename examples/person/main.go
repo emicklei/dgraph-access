@@ -62,12 +62,6 @@ func main() {
 func insertData(da *dga.DGraphAccess) error {
 	john := &Person{Name: "John", Surname: "Doe"}
 	jane := &Person{Name: "Jane", Surname: "Doe"}
-	if err := da.CreateNode(john); err != nil {
-		return err
-	}
-	if err := da.CreateNode(jane); err != nil {
-		return err
-	}
 	if err := da.CreateEdge(john, "isMarriedTo", jane); err != nil {
 		return err
 	}

@@ -136,14 +136,8 @@ func insertData(xs *dga.DGraphAccess) error {
 	pip2 := &PermissionsInProject{
 		Permissions: []string{"role/viewer"},
 	}
-	if err := xs.CreateNode(pip2); err != nil {
-		return err
-	}
 	ci := &CloudIdentity{
 		User: "john.doe",
-	}
-	if err := xs.CreateNode(ci); err != nil {
-		return err
 	}
 	if err := xs.CreateEdge(pip2, "identity", ci); err != nil {
 		return err
