@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type PredicateCondition struct {
+type predicateCondition struct {
 	Predicate string
 	Object    interface{}
 }

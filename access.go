@@ -160,29 +160,16 @@ func (d *DGraphAccess) Do(o Operation) (hadEffect bool, err error) {
 	return o.Do(d)
 }
 
-// NoFacets can be used in CreateEdge for passing no facets.
-var NoFacets map[string]interface{} = nil
-
 // CreateEdge creates a new Edge (using an NQuad).
 // Return an error if the mutation fails.
 // Requires a DGraphAccess with a Write transaction.
 // If subject is a non-created Node than create it first ; abort if error
 // If object is a non-created Node than create it first ; abort if error
 func (d *DGraphAccess) CreateEdge(subject HasUID, predicate string, object interface{}) error {
-	return d.CreateEdgeWithFacets(subject, predicate, object, NoFacets)
-}
-
-// CreateEdgeWithFacets creates a new Edge (using an NQuad) that has facets (can be nil or empty)
-// Return an error if the mutation fails.
-// Requires a DGraphAccess with a Write transaction.
-// If subject is a non-created Node than create it first ; abort if error
-// If object is a non-created Node than create it first ; abort if error
-func (d *DGraphAccess) CreateEdgeWithFacets(subject HasUID, predicate string, object interface{}, facetsOrNil map[string]interface{}) error {
 	c := CreateEdge{
 		Subject:   subject,
 		Predicate: predicate,
 		Object:    object,
-		Facets:    facetsOrNil,
 	}
 	_, err := c.Do(d)
 	return err

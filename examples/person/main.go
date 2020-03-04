@@ -68,10 +68,11 @@ func main() {
 	op := dga.CreateNode{
 		Node: jack,
 	}
-	op.Condition("name", jack.Name)
+	op.Unless("name", jack.Name)
 	if created, err := dac.Do(op); err != nil {
 		log.Println(err)
 	} else {
+		dac.Commit()
 		if created {
 			log.Println("uid:", jack.UID, "name:", jack.Name, "surname:", jack.Surname)
 		}

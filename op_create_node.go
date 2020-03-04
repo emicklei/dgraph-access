@@ -7,13 +7,15 @@ import (
 	"github.com/dgraph-io/dgo/v2/protos/api"
 )
 
+// CreateNode models the operation to (conditionally) create a Dgraph node.
 type CreateNode struct {
 	Node      HasUID
-	condition PredicateCondition
+	condition predicateCondition
 }
 
-func (c *CreateNode) Condition(predictate string, object interface{}) {
-	c.condition = PredicateCondition{
+// Unless is a means to conditionally create the node. Create unless [predicate=object] for uids of the same type is true.
+func (c *CreateNode) Unless(predictate string, object interface{}) {
+	c.condition = predicateCondition{
 		Predicate: predictate,
 		Object:    object,
 	}
