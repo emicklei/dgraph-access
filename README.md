@@ -20,6 +20,8 @@ This package was created to reduce the boilerplate code required to use the `raw
 - type Node to encapsulate an uid and graph.type for your own entities
 - type DgraphAccess to handle transactions, JSON marshalling and populating entities
 - type Mutation to encapsulate a dgraph mutations that contains a list of RDF triples (NQuad values)
+- DgraphAccess can trace the queries, mutations and responses for debugging
+- DgraphAccess also provides a fluent interface for the operations
 
 ## usage
 

@@ -11,5 +11,8 @@ func (a AlterSchema) Do(d *DGraphAccess) error {
 		return err
 	}
 	op := &api.Operation{Schema: a.Source}
+	if d.traceEnabled {
+		trace("AlterSchema", "src", a.Source)
+	}
 	return d.client.Alter(d.ctx, op)
 }

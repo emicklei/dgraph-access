@@ -16,7 +16,7 @@ type RunQuery struct {
 // Do executes the raw query and populates the result with the data found using a given key.
 func (r RunQuery) Do(d *DGraphAccess) (hadEffect bool, err error) {
 	if d.traceEnabled {
-		trace(r.Query)
+		trace("RunQuery", "query", r.Query)
 	}
 	resp, err := d.txn.Query(d.ctx, r.Query)
 	if err != nil {
@@ -25,7 +25,7 @@ func (r RunQuery) Do(d *DGraphAccess) (hadEffect bool, err error) {
 		return false, ErrNoResultsFound
 	}
 	if d.traceEnabled {
-		trace(string(resp.Json))
+		trace("RunQuery", "resp", string(resp.Json))
 	}
 	qresult := map[string][]interface{}{}
 	err = json.Unmarshal(resp.Json, &qresult)

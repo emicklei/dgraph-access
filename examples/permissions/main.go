@@ -100,6 +100,7 @@ func main() {
 }
 
 func insertData(d *dga.DGraphAccess) error {
+	f := d.Fluent()
 	// serviceAcount(compute-default) has permission(role/editor) in project(my-project)
 	sa := &CloudIdentity{
 		ServiceAccount: "compute-default",
@@ -111,23 +112,23 @@ func insertData(d *dga.DGraphAccess) error {
 	pr := &Project{
 		Name: "my-project",
 	}
-	if err := d.Fluent().CreateNode(pr); err != nil {
+	if err := f.CreateNode(pr); err != nil {
 		return err
 	}
 	fmt.Println("project:", pr.UID)
 	pip := &PermissionsInProject{
 		Permissions: []string{"role/editor"},
 	}
-	if err := d.Fluent().CreateNode(pip); err != nil {
+	if err := f.CreateNode(pip); err != nil {
 		return err
 	}
 	fmt.Println("permissions-in-project:", pip.UID)
-	if err := d.Fluent().CreateEdge(pip, "identity", sa); err != nil {
+	if err := f.CreateEdge(pip, "identity", sa); err != nil {
 		return err
 	}
 	fmt.Println("permissions-in-project", pip.UID, "->", "serviceAccount", sa.UID)
 
-	if err := d.Fluent().CreateEdge(pip, "project", pr); err != nil {
+	if err := f.CreateEdge(pip, "project", pr); err != nil {
 		return err
 	}
 	fmt.Println("permissions-in-project", pip.UID, "->", "project", pr.UID)
@@ -139,24 +140,24 @@ func insertData(d *dga.DGraphAccess) error {
 	ci := &CloudIdentity{
 		User: "john.doe",
 	}
-	if err := d.Fluent().CreateEdge(pip2, "identity", ci); err != nil {
+	if err := f.CreateEdge(pip2, "identity", ci); err != nil {
 		return err
 	}
 	fmt.Println("permissions-in-project", pip2.UID, "->", "user", ci.UID)
 
-	if err := d.Fluent().CreateEdge(pip2, "project", pr); err != nil {
+	if err := f.CreateEdge(pip2, "project", pr); err != nil {
 		return err
 	}
 	fmt.Println("permissions-in-project", pip2.UID, "->", "project", pr.UID)
 	return nil
 }
 
-func alterSchema(da *dga.DGraphAccess) error {
+func alterSchema(d *dga.DGraphAccess) error {
 	content, err := ioutil.ReadFile("schema.txt")
 	if err != nil {
 		return err
 	}
-	return da.Fluent().AlterSchema(string(content))
+	return d.Fluent().AlterSchema(string(content))
 }
 
 func newClient() *dgo.Dgraph {

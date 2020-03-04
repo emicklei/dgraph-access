@@ -47,7 +47,7 @@ func (c CreateNode) unconditional(d *DGraphAccess) error {
 		return err
 	}
 	if d.traceEnabled {
-		trace("JSON mutation:", string(data))
+		trace("CreateNode", "mutation", string(data))
 	}
 	mu := &api.Mutation{SetJson: data}
 	resp, err := d.txn.Mutate(d.ctx, mu)
@@ -80,9 +80,9 @@ func (c *CreateNode) conditional(d *DGraphAccess) (created bool, fail error) {
 	}
 	query := fmt.Sprintf("query {node as var(func: type(%s)) @filter(%s)}", dtype, findFilterContent(c.condition.Predicate, c.condition.Object))
 	if d.traceEnabled {
-		trace("CreateNodeIfAbsent query:", query)
-		trace("CreateNodeIfAbsent cond:", mu.Cond)
-		trace("CreateNodeIfAbsent JSON:", string(data))
+		trace("CreateNode", "query", query)
+		trace("CreateNode", "cond", mu.Cond)
+		trace("CreateNode", "JSON", string(data))
 	}
 	req := &api.Request{
 		Query:     query,
@@ -92,7 +92,7 @@ func (c *CreateNode) conditional(d *DGraphAccess) (created bool, fail error) {
 	if err != nil {
 		return false, err
 	}
-	trace(resp)
+	trace("CreateNode", "resp", resp)
 	if len(resp.GetUids()) == 0 {
 		// not absent, no node created
 		return false, nil

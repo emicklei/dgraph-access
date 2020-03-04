@@ -27,7 +27,7 @@ query FindWithTypeAndPredicate {
 	}
 }`, st, filterContent, st)
 	if d.traceEnabled {
-		trace(q)
+		trace("FindEquals", "query", q)
 	}
 	resp, err := d.txn.Query(d.ctx, q)
 	if err != nil {
@@ -36,7 +36,7 @@ query FindWithTypeAndPredicate {
 		return false, ErrNoResultsFound
 	}
 	if d.traceEnabled {
-		trace(string(resp.Json))
+		trace("FindEquals", "resp", string(resp.Json))
 	}
 	qresult := map[string][]interface{}{}
 	err = json.Unmarshal(resp.Json, &qresult)

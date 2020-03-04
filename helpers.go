@@ -31,9 +31,9 @@ func simpleType(result interface{}) string {
 	return tokens[len(tokens)-1]
 }
 
-func trace(msg ...interface{}) {
+func trace(functionName string, msg ...interface{}) {
 	b := new(bytes.Buffer)
-	fmt.Fprint(b, "[dgraph-access-trace]")
+	fmt.Fprintf(b, "[dgraph-access-trace|%s]", functionName)
 	for _, each := range msg {
 		fmt.Fprintf(b, " %v", each)
 	}

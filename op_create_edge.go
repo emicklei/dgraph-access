@@ -1,17 +1,15 @@
 package dga
 
 import (
-	"fmt"
-
 	"github.com/dgraph-io/dgo/v2/protos/api"
 )
 
+// CreateEdge represents a Dgraph operation.
 type CreateEdge struct {
 	Subject   HasUID
 	Predicate string
 	Object    interface{}
 	Facets    map[string]interface{}
-	IfAbsent  bool
 }
 
 // Do creates a new Edge (using an NQuad).
@@ -48,7 +46,7 @@ func (c CreateEdge) Do(d *DGraphAccess) (created bool, fail error) {
 	}
 	nQuads := nq.Bytes()
 	if d.traceEnabled {
-		trace(fmt.Sprintf("RDF mutation (nquad): [%s]", string(nQuads)))
+		trace("CreateEdge", "nquad", string(nQuads))
 	}
 	_, err := d.txn.Mutate(d.ctx, &api.Mutation{SetNquads: nQuads})
 	return true, err
