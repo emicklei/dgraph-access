@@ -53,35 +53,60 @@ func main() {
 
 	// find using type and name
 	p := Person{}
-	err := dac.FindEquals(&p, "name", "John")
-	if err != nil {
-		log.Println(err)
+	if _, err := dac.Do(dga.FindEquals{
+		Predicate: "name",
+		Object:    "John",
+		Result:    &p,
+	}); err != nil {
+		log.Fatal(err)
 	}
 	log.Println("uid:", p.UID, "name:", p.Name, "surname:", p.Surname)
 
 	// create Jack if missing
 	dac = dac.ForReadWrite(ctx)
 	jack := &Person{Name: "Jack", Surname: "Doe"}
-	err = dac.CreateNodeIfAbsent(jack, "name", jack.Name)
-	if err != nil {
-		log.Println(err)
+	op := dga.CreateNode{
+		Node: jack,
 	}
-	log.Println("uid:", jack.UID, "name:", jack.Name, "surname:", jack.Surname)
+	op.Condition("name", jack.Name)
+	if created, err := dac.Do(op); err != nil {
+		log.Println(err)
+	} else {
+		if created {
+			log.Println("uid:", jack.UID, "name:", jack.Name, "surname:", jack.Surname)
+		}
+	}
 }
 
-func insertData(da *dga.DGraphAccess) error {
+func insertData(d *dga.DGraphAccess) error {
 	john := &Person{Name: "John", Surname: "Doe"}
 	jane := &Person{Name: "Jane", Surname: "Doe"}
-	if err := da.CreateEdge(john, "isMarriedTo", jane); err != nil {
+
+	op := dga.CreateEdge{
+		Subject:   john,
+		Predicate: "isMarriedTo",
+		Object:    jane,
+	}
+	if _, err := d.Do(op); err != nil {
 		return err
 	}
-	if err := da.CreateEdgeWithFacets(jane, "isMarriedTo", john, dga.NoFacets); err != nil {
+	op = dga.CreateEdge{
+		Subject:   jane,
+		Predicate: "isMarriedTo",
+		Object:    john,
+	}
+	if _, err := d.Do(op); err != nil {
 		return err
 	}
-	props := map[string]interface{}{
-		"style": "spanish",
+	op = dga.CreateEdge{
+		Subject:   jane,
+		Predicate: "likesToDanceWith",
+		Object:    john,
+		Facets: map[string]interface{}{
+			"style": "spanish",
+		},
 	}
-	if err := da.CreateEdgeWithFacets(jane, "likesToDanceWith", john, props); err != nil {
+	if _, err := d.Do(op); err != nil {
 		return err
 	}
 	return nil

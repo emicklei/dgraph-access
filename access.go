@@ -1,12 +1,7 @@
 package dga
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
-	"strings"
 
 	"github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -157,6 +152,14 @@ func (d *DGraphAccess) InTransactionDo(ctx context.Context, do func(da *DGraphAc
 	return wtx.Commit()
 }
 
+type Operation interface {
+	Do(d *DGraphAccess) (hadEffect bool, err error)
+}
+
+func (d *DGraphAccess) Do(o Operation) (hadEffect bool, err error) {
+	return o.Do(d)
+}
+
 // NoFacets can be used in CreateEdge for passing no facets.
 var NoFacets map[string]interface{} = nil
 
@@ -175,33 +178,13 @@ func (d *DGraphAccess) CreateEdge(subject HasUID, predicate string, object inter
 // If subject is a non-created Node than create it first ; abort if error
 // If object is a non-created Node than create it first ; abort if error
 func (d *DGraphAccess) CreateEdgeWithFacets(subject HasUID, predicate string, object interface{}, facetsOrNil map[string]interface{}) error {
-	if err := d.checkState(); err != nil {
-		return err
-	}
-	if subject.GetUID().IsZero() {
-		if err := d.CreateNode(subject); err != nil {
-			return err
-		}
-	}
-	if uid, ok := object.(HasUID); ok {
-		if uid.GetUID().IsZero() {
-			if err := d.CreateNode(uid); err != nil {
-				return err
-			}
-		}
-		object = uid.GetUID()
-	}
-	nq := NQuad{
-		Subject:   subject.GetUID(),
+	c := CreateEdge{
+		Subject:   subject,
 		Predicate: predicate,
 		Object:    object,
 		Facets:    facetsOrNil,
 	}
-	nQuads := nq.Bytes()
-	if d.traceEnabled {
-		trace(fmt.Sprintf("RDF mutation (nquad): [%s]", string(nQuads)))
-	}
-	_, err := d.txn.Mutate(d.ctx, &api.Mutation{SetNquads: nQuads})
+	_, err := c.Do(d)
 	return err
 }
 
@@ -209,172 +192,31 @@ func (d *DGraphAccess) CreateEdgeWithFacets(subject HasUID, predicate string, ob
 // Return an error if the mutation fails.
 // Requires a DGraphAccess with a Write transaction.
 func (d *DGraphAccess) CreateNode(node HasUID) error {
-	if err := d.checkState(); err != nil {
-		return err
+	c := CreateNode{
+		Node: node,
 	}
-	if node.GetUID().IsZero() {
-		node.SetUID(BlankUID("temp"))
-	}
-	if len(node.GetTypes()) == 0 {
-		node.SetType(simpleType(node))
-	}
-	data, err := json.Marshal(node)
-	if err != nil {
-		return err
-	}
-	if d.traceEnabled {
-		trace("JSON mutation:", string(data))
-	}
-	mu := &api.Mutation{SetJson: data}
-	resp, err := d.txn.Mutate(d.ctx, mu)
-	if err != nil {
-		return err
-	}
-	var first string
-	for _, uid := range resp.GetUids() {
-		first = uid
-		break
-	}
-	node.SetUID(StringUID(first))
-	return nil
-}
-
-// CreateNodeIfAbsent creates a new Node only if no match is found for a node of the same type and a given predicate->object.
-// Return an error if the mutation fails. Requires a DGraphAccess with a Write transaction.
-func (d *DGraphAccess) CreateNodeIfAbsent(node HasUID, predicateName, value interface{}) error {
-	// TODO check uid of node
-	node.SetUID(BlankUID("temp"))
-	if len(node.GetTypes()) == 0 {
-		node.SetType(simpleType(node))
-	}
-	data, err := json.Marshal(node)
-	if err != nil {
-		return err
-	}
-	mu := &api.Mutation{
-		Cond:    `@if(eq(len(node), 0))`,
-		SetJson: data,
-	}
-	dtype := node.GetTypes()[0]
-	query := fmt.Sprintf("query {node as var(func: type(%s)) @filter(%s)}", dtype, findFilterContent(predicateName, value))
-	if d.traceEnabled {
-		trace("CreateNodeIfAbsent query:", query)
-		trace("CreateNodeIfAbsent cond:", mu.Cond)
-		trace("CreateNodeIfAbsent JSON:", string(data))
-	}
-	req := &api.Request{
-		Query:     query,
-		Mutations: []*api.Mutation{mu},
-	}
-	resp, err := d.txn.Do(d.ctx, req)
-	if err != nil {
-		return err
-	}
-	var first string
-	for _, uid := range resp.GetUids() {
-		first = uid
-		break
-	}
-	node.SetUID(StringUID(first))
-	return nil
-}
-
-func simpleType(result interface{}) string {
-	tokens := strings.Split(fmt.Sprintf("%T", result), ".")
-	return tokens[len(tokens)-1]
+	_, err := c.Do(d)
+	return err
 }
 
 // RunQuery executes the raw query and populates the result with the data found using a given key.
 func (d *DGraphAccess) RunQuery(result interface{}, query string, dataKey string) error {
-	if d.traceEnabled {
-		trace(query)
+	r := RunQuery{
+		Result:  result,
+		Query:   query,
+		DataKey: dataKey,
 	}
-	resp, err := d.txn.Query(d.ctx, query)
-	if err != nil {
-		// TODO check error
-		log.Println(err)
-		return ErrNoResultsFound
-	}
-	if d.traceEnabled {
-		trace(string(resp.Json))
-	}
-	qresult := map[string][]interface{}{}
-	err = json.Unmarshal(resp.Json, &qresult)
-	if err != nil {
-		return ErrUnmarshalQueryResult
-	}
-	findOne := qresult[dataKey]
-	if len(findOne) == 0 {
-		return ErrNoResultsFound
-	}
-	// mapstructure pkg did not work for this case
-	// TODO optimize this
-	resultData := new(bytes.Buffer)
-	json.NewEncoder(resultData).Encode(findOne[0])
-	resultBytes := resultData.Bytes()
-	return json.NewDecoder(bytes.NewReader(resultBytes)).Decode(result)
-}
-
-func findFilterContent(predicateName, value interface{}) (filterContent string) {
-	if s, ok := value.(string); ok {
-		filterContent = fmt.Sprintf("eq(%s,%q)", predicateName, s)
-	} else if n, ok := value.(HasUID); ok {
-		filterContent = fmt.Sprintf("uid_in(%s,%s)", predicateName, n.GetUID().Assigned())
-	} else if u, ok := value.(UID); ok {
-		filterContent = fmt.Sprintf("uid_in(%s,%s)", predicateName, u.Assigned())
-	} else {
-		// unhandled type, TODO
-		filterContent = fmt.Sprintf("eq(%s,%v)", predicateName, s)
-	}
-	return filterContent
+	_, err := r.Do(d)
+	return err
 }
 
 // FindEquals populates the result with the result of matching a predicate with a value.
-func (d *DGraphAccess) FindEquals(result interface{}, predicateName, value interface{}) error {
-	st := simpleType(result)
-	filterContent := findFilterContent(predicateName, value)
-	q := fmt.Sprintf(`
-query FindWithTypeAndPredicate {
-	q(func: type(%s)) @filter(%s) {
-		uid	
-		dgraph.type
-		expand(%s)
+func (d *DGraphAccess) FindEquals(result interface{}, predicateName string, value interface{}) error {
+	f := FindEquals{
+		Result:    result,
+		Predicate: predicateName,
+		Object:    value,
 	}
-}`, st, filterContent, st)
-	if d.traceEnabled {
-		trace(q)
-	}
-	resp, err := d.txn.Query(d.ctx, q)
-	if err != nil {
-		// TODO check error
-		log.Println(err)
-		return ErrNoResultsFound
-	}
-	if d.traceEnabled {
-		trace(string(resp.Json))
-	}
-	qresult := map[string][]interface{}{}
-	err = json.Unmarshal(resp.Json, &qresult)
-	if err != nil {
-		return ErrUnmarshalQueryResult
-	}
-	findOne := qresult["q"]
-	if len(findOne) == 0 {
-		return ErrNoResultsFound
-	}
-	// mapstructure pkg did not work for this case
-	// TODO optimize this
-	resultData := new(bytes.Buffer)
-	json.NewEncoder(resultData).Encode(findOne[0])
-	resultBytes := resultData.Bytes()
-	return json.NewDecoder(bytes.NewReader(resultBytes)).Decode(result)
-}
-
-func trace(msg ...interface{}) {
-	b := new(bytes.Buffer)
-	fmt.Fprint(b, "[dgraph-access-trace]")
-	for _, each := range msg {
-		fmt.Fprintf(b, " %v", each)
-	}
-	log.Println(b.String())
+	_, err := f.Do(d)
+	return err
 }
