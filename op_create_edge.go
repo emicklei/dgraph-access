@@ -15,28 +15,30 @@ type CreateEdge struct {
 }
 
 // Do creates a new Edge (using an NQuad).
+// If Subject is a non-created Node than create it first ; abort if error
+// If Object is a non-created Node than create it first ; abort if error
 // Returns an error if the mutation fails.
 // Returns whether the edge was created when the absent check was requested.
 // Requires a DGraphAccess with a Write transaction.
-// If Subject is a non-created Node than create it first ; abort if error
-// If Object is a non-created Node than create it first ; abort if error
 func (c CreateEdge) Do(d *DGraphAccess) (created bool, fail error) {
 	if err := d.checkState(); err != nil {
 		return false, err
 	}
+	// create subject if new Node
 	if c.Subject.GetUID().IsZero() {
-		if err := d.CreateNode(c.Subject); err != nil {
+		if err := d.Fluent().CreateNode(c.Subject); err != nil {
 			return false, err
 		}
 	}
+	// create object if new Node
 	object := c.Object
-	if uid, ok := c.Object.(HasUID); ok {
-		if uid.GetUID().IsZero() {
-			if err := d.CreateNode(uid); err != nil {
+	if huid, ok := c.Object.(HasUID); ok {
+		if huid.GetUID().IsZero() {
+			if err := d.Fluent().CreateNode(huid); err != nil {
 				return false, err
 			}
 		}
-		object = uid.GetUID()
+		object = huid.GetUID()
 	}
 	nq := NQuad{
 		Subject:   c.Subject.GetUID(),

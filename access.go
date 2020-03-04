@@ -105,17 +105,6 @@ func (d *DGraphAccess) ForReadOnly(ctx context.Context) *DGraphAccess {
 	}
 }
 
-// AlterSchema uses a schema definition to change the current DGraph schema.
-// This operation is idempotent.
-// Requires a DGraphAccess with a Write transaction.
-func (d *DGraphAccess) AlterSchema(source string) error {
-	if err := d.checkState(); err != nil {
-		return err
-	}
-	op := &api.Operation{Schema: source}
-	return d.client.Alter(d.ctx, op)
-}
-
 // Commit completes the current transaction.
 // Return an error if the DGraphAccess is in the wrong state or if the Commit fails.
 // Requires a DGraphAccess with a Write transaction.
@@ -152,58 +141,17 @@ func (d *DGraphAccess) InTransactionDo(ctx context.Context, do func(da *DGraphAc
 	return wtx.Commit()
 }
 
+// Operation is for dispatching commands using a DGraphAccess.
 type Operation interface {
 	Do(d *DGraphAccess) (hadEffect bool, err error)
 }
 
+// Do executes the operation. Return whether the operation had effect or an error.
 func (d *DGraphAccess) Do(o Operation) (hadEffect bool, err error) {
 	return o.Do(d)
 }
 
-// CreateEdge creates a new Edge (using an NQuad).
-// Return an error if the mutation fails.
-// Requires a DGraphAccess with a Write transaction.
-// If subject is a non-created Node than create it first ; abort if error
-// If object is a non-created Node than create it first ; abort if error
-func (d *DGraphAccess) CreateEdge(subject HasUID, predicate string, object interface{}) error {
-	c := CreateEdge{
-		Subject:   subject,
-		Predicate: predicate,
-		Object:    object,
-	}
-	_, err := c.Do(d)
-	return err
-}
-
-// CreateNode creates a new Node.
-// Return an error if the mutation fails.
-// Requires a DGraphAccess with a Write transaction.
-func (d *DGraphAccess) CreateNode(node HasUID) error {
-	c := CreateNode{
-		Node: node,
-	}
-	_, err := c.Do(d)
-	return err
-}
-
-// RunQuery executes the raw query and populates the result with the data found using a given key.
-func (d *DGraphAccess) RunQuery(result interface{}, query string, dataKey string) error {
-	r := RunQuery{
-		Result:  result,
-		Query:   query,
-		DataKey: dataKey,
-	}
-	_, err := r.Do(d)
-	return err
-}
-
-// FindEquals populates the result with the result of matching a predicate with a value.
-func (d *DGraphAccess) FindEquals(result interface{}, predicateName string, value interface{}) error {
-	f := FindEquals{
-		Result:    result,
-		Predicate: predicateName,
-		Object:    value,
-	}
-	_, err := f.Do(d)
-	return err
+// Fluent gives access to the fluent interface of DGraphAccess.
+func (d *DGraphAccess) Fluent() Fluent {
+	return Fluent{access: d}
 }

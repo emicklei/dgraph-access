@@ -53,30 +53,21 @@ func main() {
 
 	// find using type and name
 	p := Person{}
-	if _, err := dac.Do(dga.FindEquals{
-		Predicate: "name",
-		Object:    "John",
-		Result:    &p,
-	}); err != nil {
+	if err := dac.Fluent().FindEquals(&p, "name", "John"); err != nil {
 		log.Fatal(err)
 	}
 	log.Println("uid:", p.UID, "name:", p.Name, "surname:", p.Surname)
 
 	// create Jack if missing
-	dac = dac.ForReadWrite(ctx)
 	jack := &Person{Name: "Jack", Surname: "Doe"}
-	op := dga.CreateNode{
-		Node: jack,
-	}
+	op := dga.CreateNode{Node: jack}
 	op.Unless("name", jack.Name)
-	if created, err := dac.Do(op); err != nil {
-		log.Println(err)
-	} else {
-		dac.Commit()
-		if created {
-			log.Println("uid:", jack.UID, "name:", jack.Name, "surname:", jack.Surname)
-		}
-	}
+
+	dac.InTransactionDo(ctx, func(d *dga.DGraphAccess) error {
+		_, err := d.Do(op)
+		return err
+	})
+	log.Println("uid:", jack.UID, "name:", jack.Name, "surname:", jack.Surname)
 }
 
 func insertData(d *dga.DGraphAccess) error {
@@ -113,8 +104,8 @@ func insertData(d *dga.DGraphAccess) error {
 	return nil
 }
 
-func alterSchema(da *dga.DGraphAccess) error {
-	return da.AlterSchema(`
+func alterSchema(d *dga.DGraphAccess) error {
+	return d.Fluent().AlterSchema(`
 	name: string @index(exact) .
 	surname: string .
 

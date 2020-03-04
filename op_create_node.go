@@ -92,6 +92,7 @@ func (c *CreateNode) conditional(d *DGraphAccess) (created bool, fail error) {
 	if err != nil {
 		return false, err
 	}
+	trace(resp)
 	if len(resp.GetUids()) == 0 {
 		// not absent, no node created
 		return false, nil
