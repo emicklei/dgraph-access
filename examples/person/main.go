@@ -53,10 +53,13 @@ func main() {
 
 	// find using type and name
 	p := Person{}
-	if err := dac.Fluent().FindEquals(&p, "name", "John"); err != nil {
+	ok, err := dac.Fluent().FindEquals(&p, "name", "John")
+	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("uid:", p.UID, "name:", p.Name, "surname:", p.Surname)
+	if ok {
+		log.Println("uid:", p.UID, "name:", p.Name, "surname:", p.Surname)
+	}
 
 	// create Jack if missing
 	jack := &Person{Name: "Jack", Surname: "Doe"}
@@ -74,6 +77,7 @@ func insertData(d *dga.DGraphAccess) error {
 	john := &Person{Name: "John", Surname: "Doe"}
 	jane := &Person{Name: "Jane", Surname: "Doe"}
 
+	// use the operation
 	op := dga.CreateEdge{
 		Subject:   john,
 		Predicate: "isMarriedTo",
@@ -82,14 +86,12 @@ func insertData(d *dga.DGraphAccess) error {
 	if _, err := d.Do(op); err != nil {
 		return err
 	}
-	op = dga.CreateEdge{
-		Subject:   jane,
-		Predicate: "isMarriedTo",
-		Object:    john,
-	}
-	if _, err := d.Do(op); err != nil {
+	// use the fluent interface
+	f := d.Fluent()
+	if err := f.CreateEdge(jane, "isMarriedTo", john); err != nil {
 		return err
 	}
+	// create with a facet
 	op = dga.CreateEdge{
 		Subject:   jane,
 		Predicate: "likesToDanceWith",

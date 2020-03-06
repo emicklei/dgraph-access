@@ -3,7 +3,6 @@ package dga
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 )
 
 // RunQuery executes the raw query and populates the result with the data found using a given key.
@@ -20,9 +19,7 @@ func (r RunQuery) Do(d *DGraphAccess) (hadEffect bool, err error) {
 	}
 	resp, err := d.txn.Query(d.ctx, r.Query)
 	if err != nil {
-		// TODO check error
-		log.Println(err)
-		return false, ErrNoResultsFound
+		return false, err
 	}
 	if d.traceEnabled {
 		trace("RunQuery", "resp", string(resp.Json))
@@ -34,7 +31,7 @@ func (r RunQuery) Do(d *DGraphAccess) (hadEffect bool, err error) {
 	}
 	findOne := qresult[r.DataKey]
 	if len(findOne) == 0 {
-		return false, ErrNoResultsFound
+		return false, nil
 	}
 	// mapstructure pkg did not work for this case
 	// TODO optimize this

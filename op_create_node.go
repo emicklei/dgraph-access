@@ -33,7 +33,7 @@ func (c CreateNode) Do(d *DGraphAccess) (created bool, fail error) {
 }
 
 func (c CreateNode) unconditional(d *DGraphAccess) error {
-	if err := d.checkState(); err != nil {
+	if err := d.CheckState(); err != nil {
 		return err
 	}
 	if c.Node.GetUID().IsZero() {

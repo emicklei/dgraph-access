@@ -50,20 +50,20 @@ func main() {
 	d = d.ForReadOnly(ctx)
 
 	john := new(CloudIdentity)
-	if err := d.Fluent().FindEquals(john, "user", "john.doe"); err != nil {
+	if _, err := d.Fluent().FindEquals(john, "user", "john.doe"); err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("%#v", john)
 
 	pip := new(PermissionsInProject)
-	if err := d.Fluent().FindEquals(pip, "identity", john); err != nil {
+	if _, err := d.Fluent().FindEquals(pip, "identity", john); err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("(with node) %#v", pip)
 
 	{ // if you only have the uid of John
 		pip := new(PermissionsInProject)
-		if err := d.Fluent().FindEquals(pip, "identity", john.UID); err != nil {
+		if _, err := d.Fluent().FindEquals(pip, "identity", john.UID); err != nil {
 			log.Fatal(err)
 		}
 		log.Printf("(uid only) %#v", pip)
@@ -78,10 +78,13 @@ func main() {
 		}
 	  }`
 	data := map[string][]string{}
-	if err := d.Fluent().RunQuery(&data, query, "q"); err != nil {
+	ok, err := d.Fluent().RunQuery(&data, query, "q")
+	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("(filter predicate) %#v", data["permissions"])
+	if ok {
+		log.Printf("(filter predicate) %#v", data["permissions"])
+	}
 
 	// for which projects has service account [compute-default] permissions [role/editor] ?
 	query = `{
@@ -93,10 +96,13 @@ func main() {
 		}
 	  }`
 	data2 := map[string]interface{}{}
-	if err := d.Fluent().RunQuery(&data2, query, "q"); err != nil {
+	ok, err = d.Fluent().RunQuery(&data2, query, "q")
+	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("(filter account and permissions) %#v", data2["project"])
+	if ok {
+		log.Printf("(filter account and permissions) %#v", data2["project"])
+	}
 }
 
 func insertData(d *dga.DGraphAccess) error {

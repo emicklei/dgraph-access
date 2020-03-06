@@ -42,23 +42,21 @@ func (f Fluent) CreateNode(node HasUID) error {
 }
 
 // RunQuery executes the raw query and populates the result with the data found using a given key.
-func (f Fluent) RunQuery(result interface{}, query string, dataKey string) error {
+func (f Fluent) RunQuery(result interface{}, query string, dataKey string) (bool, error) {
 	r := RunQuery{
 		Result:  result,
 		Query:   query,
 		DataKey: dataKey,
 	}
-	_, err := r.Do(f.access)
-	return err
+	return r.Do(f.access)
 }
 
 // FindEquals populates the result with the result of matching a predicate with a value.
-func (f Fluent) FindEquals(result interface{}, predicateName string, value interface{}) error {
+func (f Fluent) FindEquals(result interface{}, predicateName string, value interface{}) (bool, error) {
 	e := FindEquals{
 		Result:    result,
 		Predicate: predicateName,
 		Object:    value,
 	}
-	_, err := e.Do(f.access)
-	return err
+	return e.Do(f.access)
 }

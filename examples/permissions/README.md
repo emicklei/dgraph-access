@@ -7,3 +7,17 @@
 ## run example
 
     go run *.go
+
+## some Ratel queries
+
+    {
+        node as var(func: type(PermissionsInProject)) 
+        node_uid(func: uid(node)){
+            expand(PermissionsInProject) {
+                project_name
+                group
+                user
+                serviceAccount
+            }
+        }
+    }

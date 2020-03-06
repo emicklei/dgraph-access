@@ -19,7 +19,7 @@ type CreateEdge struct {
 // Returns whether the edge was created when the absent check was requested.
 // Requires a DGraphAccess with a Write transaction.
 func (c CreateEdge) Do(d *DGraphAccess) (created bool, fail error) {
-	if err := d.checkState(); err != nil {
+	if err := d.CheckState(); err != nil {
 		return false, err
 	}
 	// create subject if new Node

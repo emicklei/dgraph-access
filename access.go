@@ -18,9 +18,6 @@ var (
 	// ErrNoContext is a DGraphAccess state error
 	ErrNoContext = errors.New("dgo transaction context not created")
 
-	// ErrNoResultsFound is returned from FindEquals when no node matches.
-	ErrNoResultsFound = errors.New("no results found")
-
 	// ErrUnmarshalQueryResult is returned when the result of a query cannot be unmarshalled from JSON
 	ErrUnmarshalQueryResult = errors.New("failed to unmarshal query result")
 )
@@ -42,8 +39,8 @@ type DGraphTransaction interface {
 	Query(ctx context.Context, q string) (*api.Response, error)
 }
 
-// checkState verifies that the Access can be used for a transaction (write | read only)
-func (d *DGraphAccess) checkState() error {
+// CheckState verifies that the Access can be used for a transaction (write | read only)
+func (d *DGraphAccess) CheckState() error {
 	if d.client == nil {
 		return ErrNoClient
 	}
@@ -109,7 +106,7 @@ func (d *DGraphAccess) ForReadOnly(ctx context.Context) *DGraphAccess {
 // Return an error if the DGraphAccess is in the wrong state or if the Commit fails.
 // Requires a DGraphAccess with a Write transaction.
 func (d *DGraphAccess) Commit() error {
-	if err := d.checkState(); err != nil {
+	if err := d.CheckState(); err != nil {
 		return err
 	}
 	t, c := d.txn, d.ctx

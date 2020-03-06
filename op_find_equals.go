@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 )
 
 // FindEquals populates the result with the result of matching a predicate with a value.
@@ -31,9 +30,7 @@ query FindWithTypeAndPredicate {
 	}
 	resp, err := d.txn.Query(d.ctx, q)
 	if err != nil {
-		// TODO check error
-		log.Println(err)
-		return false, ErrNoResultsFound
+		return false, err
 	}
 	if d.traceEnabled {
 		trace("FindEquals", "resp", string(resp.Json))
@@ -45,7 +42,7 @@ query FindWithTypeAndPredicate {
 	}
 	findOne := qresult["q"]
 	if len(findOne) == 0 {
-		return false, ErrNoResultsFound
+		return false, nil
 	}
 	// mapstructure pkg did not work for this case
 	// TODO optimize this
