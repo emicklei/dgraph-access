@@ -8,6 +8,8 @@ github.com/dgraph-io/dgo/v2 v2.1.0 h1:zm4gygHzZwu11y3VqDG/fDA80xgpSvLMlrhEcb9KfT
 github.com/dgraph-io/dgo/v2 v2.1.0/go.mod h1:R/MTZMGhTo60XSziuKpLXzI1OnVWQCZS5oJjxA8Q1bo=
 github.com/dgraph-io/dgo/v2 v2.2.0 h1:qYbm6mEF3wuKiRpgNOldk6PmPbBJFwj6vL7I7dTSdyc=
 github.com/dgraph-io/dgo/v2 v2.2.0/go.mod h1:LJCkLxm5fUMcU+yb8gHFjHt7ChgNuz3YnQQ6MQkmscI=
+github.com/emicklei/dgraph-parser v0.0.1 h1:htZaQlsUlfJIIlR8NJa80yq7gyXZWr7SHhY4xMhJr3g=
+github.com/emicklei/dgraph-parser v0.0.1/go.mod h1:0nRPXVDs6chB/OnWzua/6izXHnMLpoS7Ry2OxTmQHWE=
 github.com/gogo/protobuf v1.3.1/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXPKa29o=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b h1:VKtxabqXZkF25pY9ekfRL6a582T4P37/31XEstQ5p58=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
