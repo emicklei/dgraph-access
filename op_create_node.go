@@ -1,6 +1,7 @@
 package dga
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -42,14 +43,17 @@ func (c CreateNode) unconditional(d *DGraphAccess) error {
 	if len(c.Node.GetTypes()) == 0 {
 		c.Node.SetType(simpleType(c.Node))
 	}
-	data, err := json.Marshal(c.Node)
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	err := enc.Encode(c.Node)
 	if err != nil {
-		return err
+		return fmt.Errorf("CreateNode|%v", err)
 	}
 	if d.traceEnabled {
-		trace("CreateNode", "mutation", string(data))
+		trace("CreateNode", "mutation", buf.String())
 	}
-	mu := &api.Mutation{SetJson: data}
+	mu := &api.Mutation{SetJson: buf.Bytes()}
 	resp, err := d.txn.Mutate(d.ctx, mu)
 	if err != nil {
 		return err

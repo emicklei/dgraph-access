@@ -39,12 +39,18 @@ func outputFile(s *dsp.Schema) {
 		t := TypeData{Name: each.Name}
 		for _, other := range each.Predicates {
 			def := s.FindPredicate(other.Name)
+			// unless no definition
+			// OR is an edge i.o. scalar
 			if def != nil {
-				v := FieldData{
-					Name:           strings.Title(def.Name),
-					TypeDefinition: toGoType(&f, def),
-					Annotation:     toGoTags(def)}
-				t.Fields = append(t.Fields, v)
+				if !isEdge(def) {
+					v := FieldData{
+						Name:           strings.Title(def.Name),
+						TypeDefinition: toGoType(&f, def),
+						Annotation:     toGoTags(def)}
+					t.Fields = append(t.Fields, v)
+				} else {
+					log.Printf("skip Go field for [%s]\n", other.Name)
+				}
 			} else {
 				log.Println("no definition found for", other.Name)
 			}
@@ -56,19 +62,66 @@ func outputFile(s *dsp.Schema) {
 	}
 }
 
+func isEdge(p *dsp.PredicateDef) bool {
+	return p.Typename == "uid"
+}
+
 func toGoType(f *FileData, p *dsp.PredicateDef) string {
-	if p.Typename == "uid" {
+	// JSON mutations/queries are not handled for reference to Nodes
+	// if p.Typename == "uid" {
+	// 	if p.IsArray {
+	// 		return "[]dga.Node"
+	// 	} else {
+	// 		return "dga.Node"
+	// 	}
+	// }
+	switch p.Typename {
+	case "default":
 		if p.IsArray {
-			return "[]dga.Node"
-		} else {
-			return "dga.Node"
+			return "[]string"
 		}
-	}
-	if p.Typename == "dateTime" {
+		return "string"
+	case "binary":
+		return "[]byte"
+	case "int":
+		if p.IsArray {
+			return "[]int64"
+		}
+		return "int64"
+	case "float":
+		if p.IsArray {
+			return "[]float64"
+		}
+		return "float64"
+	case "bool":
+		if p.IsArray {
+			return "[]bool"
+		}
+		return "bool"
+	case "datetime":
 		f.EnsureImport("time")
+		if p.IsArray {
+			return "[]time.Time"
+		}
 		return "time.Time"
+	case "geo":
+		return "string"
+	case "uid":
+		if p.IsArray {
+			return "[]dga.UID"
+		}
+		return "dga.UID"
+	case "string", "password":
+		if p.IsArray {
+			return "[]string"
+		}
+		return "string"
+	default:
+		if p.IsArray {
+			return "[]string"
+		}
+		return "string"
 	}
-	return p.Typename
 }
 
 func toGoTags(p *dsp.PredicateDef) string {

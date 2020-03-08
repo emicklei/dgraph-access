@@ -77,8 +77,15 @@ func (u UID) Assigned() string {
 
 // MarshalJSON is part of JSON
 func (u UID) MarshalJSON() ([]byte, error) {
-	b := new(bytes.Buffer)
-	fmt.Fprintf(b, "%q", u.RDF())
+	if u.IsZero() {
+		return []byte("null"), nil
+	}
+	var b bytes.Buffer
+	if len(u.raw) > 0 {
+		fmt.Fprintf(&b, "%q", u.raw)
+	} else {
+		fmt.Fprintf(&b, `{"uid":%q}`, u.Str)
+	}
 	return b.Bytes(), nil
 }
 

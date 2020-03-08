@@ -13,7 +13,7 @@ import (
 
 type Person struct {
 	dga.Node `json:",inline"`
-	//
+	// scalar
 	Name    string `json:"name,omitempty"`
 	Surname string `json:"surname,omitempty"`
 }
@@ -91,7 +91,11 @@ func insertData(d *dga.DGraphAccess) error {
 	if err := f.CreateEdge(jane, "isMarriedTo", john); err != nil {
 		return err
 	}
-	// create with a facet
+	if err := f.CreateEdge(john, "parent", &Person{Name: "Jesse", Surname: "Doe"}); err != nil {
+		return err
+	}
+
+	// create with a facet requires to use the operation
 	op = dga.CreateEdge{
 		Subject:   jane,
 		Predicate: "likesToDanceWith",
@@ -110,10 +114,12 @@ func alterSchema(d *dga.DGraphAccess) error {
 	return d.Fluent().AlterSchema(`
 	name: string @index(exact) .
 	surname: string .
+	parent: uid .
 
 	type Person {
 		name
 		surname
+		parent
 	}
 `)
 }
