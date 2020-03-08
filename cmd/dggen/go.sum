@@ -2,3 +2,7 @@ github.com/emicklei/dgraph-parser v0.1.0 h1:I1qqbzS+s9ThF5+T+GP2ddVC6A6/uJrvh3Gf
 github.com/emicklei/dgraph-parser v0.1.0/go.mod h1:0nRPXVDs6chB/OnWzua/6izXHnMLpoS7Ry2OxTmQHWE=
 github.com/emicklei/dgraph-parser v0.2.0 h1:Y4IEkdN2svFiyMBtkFnaaesmFpZAlJqg0Fq7cr7d4nw=
 github.com/emicklei/dgraph-parser v0.2.0/go.mod h1:0nRPXVDs6chB/OnWzua/6izXHnMLpoS7Ry2OxTmQHWE=
+github.com/emicklei/dgraph-parser v0.3.0 h1:d9bq9gXLPqypXaq+MBm2H4ufb3Svl+A2s18B5qbo5tA=
+github.com/emicklei/dgraph-parser v0.3.0/go.mod h1:0nRPXVDs6chB/OnWzua/6izXHnMLpoS7Ry2OxTmQHWE=
+github.com/emicklei/dgraph-parser v0.3.1 h1:RA+6pqishdDdeggnn8Awhza94tCMzaS99V/r0vRV1Lk=
+github.com/emicklei/dgraph-parser v0.3.1/go.mod h1:0nRPXVDs6chB/OnWzua/6izXHnMLpoS7Ry2OxTmQHWE=
