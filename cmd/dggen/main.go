@@ -15,9 +15,10 @@ import (
 var (
 	schemaFile  = flag.String("s", "dgraph.schema", "dgraph.schema file")
 	packageName = flag.String("p", "main", "Go package name using in the models")
+	outputFile  = flag.String("o", "models.go", "Go file name containing all the types")
 )
 
-// go run *.go -s ../../examples/permissions/schema.txt > ../gen.go
+// go run *.go -s ../../examples/permissions/schema.txt -o ../gen.go
 func main() {
 	flag.Parse()
 	data, err := ioutil.ReadFile(*schemaFile)
@@ -29,10 +30,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	outputFile(schema)
+	generate(schema, *outputFile)
 }
 
-func outputFile(s *dsp.Schema) {
+func generate(s *dsp.Schema, output string) {
+	out, err := os.Create(output)
+	if err != nil {
+		log.Fatalln("unable to create output:", err)
+	}
+	defer out.Close()
+
 	f := FileData{PackageName: *packageName}
 	f.Imports = append(f.Imports, `dga "github.com/emicklei/dgraph-access"`)
 	for _, each := range s.Types {
@@ -49,7 +56,7 @@ func outputFile(s *dsp.Schema) {
 						Annotation:     toGoTags(def)}
 					t.Fields = append(t.Fields, v)
 				} else {
-					log.Printf("skip Go field for [%s]\n", other.Name)
+					log.Printf("skip Go field for predicate to non-scalar object [%s]\n", other.Name)
 				}
 			} else {
 				log.Println("no definition found for", other.Name)
@@ -57,7 +64,7 @@ func outputFile(s *dsp.Schema) {
 		}
 		f.Types = append(f.Types, t)
 	}
-	if err := fileTemplate.Execute(os.Stdout, f); err != nil {
+	if err := fileTemplate.Execute(out, f); err != nil {
 		log.Fatal(err)
 	}
 }
