@@ -51,7 +51,7 @@ func generate(s *dsp.Schema, output string) {
 			if def != nil {
 				if !isEdge(def) {
 					v := FieldData{
-						Name:           strings.Title(def.Name),
+						Name:           fieldName(each.Name, def.Name),
 						TypeDefinition: toGoType(&f, def),
 						Annotation:     toGoTags(def)}
 					t.Fields = append(t.Fields, v)
@@ -71,6 +71,18 @@ func generate(s *dsp.Schema, output string) {
 
 func isEdge(p *dsp.PredicateDef) bool {
 	return p.Typename == "uid"
+}
+
+func fieldName(t, s string) string {
+	if len(s) <= 3 {
+		return strings.ToUpper(s)
+	}
+	snakeless := strings.ReplaceAll(s, "_", "")
+	if strings.HasPrefix(snakeless, strings.ToLower(t)) &&
+		strings.HasSuffix(s, "id") {
+		return "ID"
+	}
+	return strings.Title(s)
 }
 
 func toGoType(f *FileData, p *dsp.PredicateDef) string {
