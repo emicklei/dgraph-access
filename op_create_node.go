@@ -14,10 +14,10 @@ type CreateNode struct {
 	condition predicateCondition
 }
 
-// Unless is a means to conditionally create the node. Create unless [predicate=object] for uids of the same type is true.
-func (c *CreateNode) Unless(predictate string, object interface{}) {
+// CreateUnless is a means to conditionally create the node. Create unless [predicate=object] for uids of the same type is true.
+func (c *CreateNode) CreateUnless(predicate string, object interface{}) {
 	c.condition = predicateCondition{
-		Predicate: predictate,
+		Predicate: predicate,
 		Object:    object,
 	}
 }
@@ -84,7 +84,7 @@ func (c *CreateNode) conditional(d *DGraphAccess) (created bool, fail error) {
 	}
 	query := fmt.Sprintf("query {node as var(func: type(%s)) @filter(%s)}", dtype, findFilterContent(c.condition.Predicate, c.condition.Object))
 	if d.traceEnabled {
-		trace("CreateNode", "query", query)
+		trace("CreateNode", query)
 		trace("CreateNode", "cond", mu.Cond)
 		trace("CreateNode", "JSON", string(data))
 	}
@@ -96,7 +96,9 @@ func (c *CreateNode) conditional(d *DGraphAccess) (created bool, fail error) {
 	if err != nil {
 		return false, err
 	}
-	trace("CreateNode", "resp", resp)
+	if d.traceEnabled {
+		trace("CreateNode", "resp", resp)
+	}
 	if len(resp.GetUids()) == 0 {
 		// not absent, no node created
 		return false, nil

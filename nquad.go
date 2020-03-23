@@ -3,6 +3,7 @@ package dga
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"time"
 )
 
@@ -90,6 +91,16 @@ func (n NQuad) WithFacet(key string, value interface{}) NQuad {
 		StorageType: n.StorageType,
 		Facets:      f,
 	}
+}
+
+func bytesFromNQuads(list []NQuad) []byte {
+	var b bytes.Buffer
+	for _, each := range list {
+		// TODO optimize using buffer?
+		(&b).Write(each.Bytes())
+		io.WriteString(&b, "\n")
+	}
+	return b.Bytes()
 }
 
 // Bytes returns the mutation line.
