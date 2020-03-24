@@ -107,6 +107,10 @@ func insertData(d *dga.DGraphAccess) error {
 	if _, err := d.Do(op); err != nil {
 		return err
 	}
+
+	// update the first name of John
+
+
 	return nil
 }
 

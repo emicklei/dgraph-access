@@ -41,6 +41,18 @@ func (f Fluent) CreateNode(node HasUID) error {
 	return err
 }
 
+// UpsertNode creates (insert) or updates a Node.
+// The operation will update iff the predicate -> object.
+// Return an error if the mutation fails.
+// Requires a DGraphAccess with a Write transaction.
+func (f Fluent) UpsertNode(node HasUID, predicate string, object interface{}) (wasCreated bool, err error) {
+	c := UpsertNode{
+		Node: node,
+	}
+	c.InsertUnless(predicate, object)
+	return c.Do(f.access)
+}
+
 // RunQuery executes the raw query and populates the result with the data found using a given key.
 func (f Fluent) RunQuery(result interface{}, query string, dataKey string) (bool, error) {
 	r := RunQuery{
