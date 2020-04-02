@@ -36,7 +36,7 @@ func main() {
 	dac := dga.NewDGraphAccess(client)
 
 	// for debugging only
-	dac = dac.WithTraceLogging()
+	//dac = dac.WithTraceLogging()
 
 	// set schema
 	if err := dac.InTransactionDo(ctx, alterSchema); err != nil {
@@ -64,13 +64,36 @@ func main() {
 	// create Jack if missing
 	jack := &Person{Name: "Jack", Surname: "Doe"}
 	op := dga.CreateNode{Node: jack}
-	op.Unless("name", jack.Name)
+	op.CreateUnless("name", jack.Name)
 
 	dac.InTransactionDo(ctx, func(d *dga.DGraphAccess) error {
 		_, err := d.Do(op)
 		return err
 	})
 	log.Println("uid:", jack.UID, "name:", jack.Name, "surname:", jack.Surname)
+
+	// find John
+	john := new(Person)
+	f := dac.Fluent()
+	if _, err := f.FindEquals(john, "name", "John"); err != nil {
+		log.Fatal("FindEquals ", err)
+	}
+	log.Println(john.GetUID(), john.Name)
+
+	// update the name of John
+	john.Name = "John James"
+	// update using old name
+	f = dac.ForReadWrite(ctx).Fluent()
+	if _, err := f.UpsertNode(john, "name", "John"); err != nil {
+		log.Fatal("UpsertNode ", err)
+	}
+
+	// find using new name
+	newJohn := new(Person)
+	if _, err := f.FindEquals(newJohn, "name", "John James"); err != nil {
+		log.Fatal("FindEquals ", err)
+	}
+	log.Println(newJohn.GetUID(), newJohn.Name)
 }
 
 func insertData(d *dga.DGraphAccess) error {
@@ -107,10 +130,6 @@ func insertData(d *dga.DGraphAccess) error {
 	if _, err := d.Do(op); err != nil {
 		return err
 	}
-
-	// update the first name of John
-
-
 	return nil
 }
 
