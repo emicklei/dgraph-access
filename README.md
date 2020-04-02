@@ -30,10 +30,30 @@ This package was created to reduce the boilerplate code required to use the `raw
         dga "github.com/emicklei/dgraph-access"
     )
 
-## example
+## quick look
 
-See [documented code examples](https://godoc.org/github.com/emicklei/dgraph-access)
+    d := dga.NewDGraphAccess(yourDgraphClient).ForReadWrite()    
+    f := d.Fluent()
+    err := f.Alterschema(`name: string @index(exact) .`)
+    type Vegetable struct {
+        Name string
+        Color string
+    }
+    v1 := &Vegetable{Name:"Carrot"}
+    err = f.CreateNode(v1)
+
+    v2 := &Vegetable{Name:"Beet"}
+    err = f.CreateEdge(v1,"similarTo",v2)
+
+    v3 := new(Vegetable)
+    err := f.FindEquals(v3,"name","Carrot")    
+
+    v2.Color = "darkred"
+    f.UpsertNode(v2,"name","Beet")
+
+## examples
 
 See [examples](https://github.com/emicklei/dgraph-access/blob/master/examples)
+See [documented code examples](https://godoc.org/github.com/emicklei/dgraph-access)
 
 © 2019-2020, [ernestmicklei.com](http://ernestmicklei.com).  MIT License. Contributions welcome.
