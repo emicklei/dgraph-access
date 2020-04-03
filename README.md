@@ -14,6 +14,10 @@ This package is under development (see commits); the API and scope may change be
 ## motivation
 
 This package was created to reduce the boilerplate code required to use the `raw` dgraph Go client.
+
+
+## features
+
 `dgraph-access` adds the following features to the standard Go client:
 
 - type UID and NQuad to create RDF triples w/o facets
@@ -23,6 +27,8 @@ This package was created to reduce the boilerplate code required to use the `raw
 - UpsertNode, CreateNode, CreateEdge, RunQuery, FindEquals model common dgraph operations
 - DgraphAccess can trace the queries, mutations and responses for debugging
 - DgraphAccess also provides a fluent interface for the operations
+
+This repository also includes the [dggen tool](https://github.com/emicklei/dgraph-access/tree/master/cmd/dggen) that takes a dgraph schema to generate Go types from Dgraph types.
 
 ## usage
 
