@@ -36,7 +36,7 @@ This package was created to reduce the boilerplate code required to use the `raw
     f := d.Fluent()
     err := f.Alterschema(`name: string @index(exact) .`)
     type Vegetable struct {
-        *dga.Node
+        dga.Node `json:",inline"
         Name string
         Color string
     }
