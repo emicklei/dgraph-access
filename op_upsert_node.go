@@ -1,6 +1,7 @@
 package dga
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -39,7 +40,7 @@ func (u UpsertNode) Do(d *DGraphAccess) (created bool, fail error) {
 	mu := &api.Mutation{
 		SetNquads: data,
 	}
-	query := fmt.Sprintf("query {node as var(func: type(%s)) @filter(%s)}", dtype, findFilterContent(u.condition.Predicate, u.condition.Object))
+	query := fmt.Sprintf("query {node as q(func: type(%s)) @filter(%s) { uid }}", dtype, findFilterContent(u.condition.Predicate, u.condition.Object))
 	if d.traceEnabled {
 		trace("UpsertNode", query)
 		trace("UpsertNode", "NQuads\n", string(data))
@@ -56,7 +57,18 @@ func (u UpsertNode) Do(d *DGraphAccess) (created bool, fail error) {
 		trace("UpsertNode", "resp", resp)
 	}
 	if len(resp.GetUids()) == 0 {
-		// not absent, no node created
+		// this means the node already exists
+		// then we need to inspect the return of the query called "q" for getting the UID
+		type queryResult struct {
+			Q []struct {
+				UID string `json:"uid"`
+			} `json:"q"`
+		}
+		var qr queryResult
+		if err := json.Unmarshal(resp.Json, &qr); err != nil {
+			return false, err
+		}
+		u.Node.SetUID(StringUID(qr.Q[0].UID))
 		return false, nil
 	}
 	var first string
