@@ -40,7 +40,7 @@ This repository also includes the [dggen tool](https://github.com/emicklei/dgrap
 
     d := dga.NewDGraphAccess(yourDgraphClient).ForReadWrite()    
     s := d.Service()
-    err := f.Alterschema(`name: string @index(exact) .`)
+    err := s.Alterschema(`name: string @index(exact) .`)
     type Vegetable struct {
         dga.Node `json:",inline"
         Name string
@@ -60,7 +60,8 @@ This repository also includes the [dggen tool](https://github.com/emicklei/dgrap
 
 ## examples
 
-See [examples](https://github.com/emicklei/dgraph-access/blob/master/examples)
+See [examples](https://github.com/emicklei/dgraph-access/blob/master/examples).
+
 See [documented code examples](https://godoc.org/github.com/emicklei/dgraph-access)
 
 © 2019-2020, [ernestmicklei.com](http://ernestmicklei.com).  MIT License. Contributions welcome.
