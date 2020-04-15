@@ -40,12 +40,12 @@ func main() {
 
 	// set schema
 	if err := dac.InTransactionDo(ctx, alterSchema); err != nil {
-		log.Fatal(err)
+		log.Fatal("AlterSchema ", err)
 	}
 
 	// insert data
 	if err := dac.InTransactionDo(ctx, insertData); err != nil {
-		log.Fatal(err)
+		log.Fatal("InsertData ", err)
 	}
 
 	// query data
@@ -53,9 +53,9 @@ func main() {
 
 	// find using type and name
 	p := Person{}
-	ok, err := dac.Fluent().FindEquals(&p, "name", "John")
+	ok, err := dac.Service().FindEquals(&p, "name", "John")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("FindEquals ", err)
 	}
 	if ok {
 		log.Println("uid:", p.UID, "name:", p.Name, "surname:", p.Surname)
@@ -74,8 +74,8 @@ func main() {
 
 	// find John
 	john := new(Person)
-	f := dac.Fluent()
-	if _, err := f.FindEquals(john, "name", "John"); err != nil {
+	s := dac.Service()
+	if _, err := s.FindEquals(john, "name", "John"); err != nil {
 		log.Fatal("FindEquals ", err)
 	}
 	log.Println(john.GetUID(), john.Name)
@@ -83,14 +83,14 @@ func main() {
 	// update the name of John
 	john.Name = "John James"
 	// update using old name
-	f = dac.ForReadWrite(ctx).Fluent()
-	if _, err := f.UpsertNode(john, "name", "John"); err != nil {
+	s = dac.ForReadWrite(ctx).Service()
+	if _, err := s.UpsertNode(john, "name", "John"); err != nil {
 		log.Fatal("UpsertNode ", err)
 	}
 
 	// find using new name
 	newJohn := new(Person)
-	if _, err := f.FindEquals(newJohn, "name", "John James"); err != nil {
+	if _, err := s.FindEquals(newJohn, "name", "John James"); err != nil {
 		log.Fatal("FindEquals ", err)
 	}
 	log.Println(newJohn.GetUID(), newJohn.Name)
@@ -110,11 +110,11 @@ func insertData(d *dga.DGraphAccess) error {
 		return err
 	}
 	// use the fluent interface
-	f := d.Fluent()
-	if err := f.CreateEdge(jane, "isMarriedTo", john); err != nil {
+	s := d.Service()
+	if err := s.CreateEdge(jane, "isMarriedTo", john); err != nil {
 		return err
 	}
-	if err := f.CreateEdge(john, "parent", &Person{Name: "Jesse", Surname: "Doe"}); err != nil {
+	if err := s.CreateEdge(john, "parent", &Person{Name: "Jesse", Surname: "Doe"}); err != nil {
 		return err
 	}
 
@@ -134,7 +134,7 @@ func insertData(d *dga.DGraphAccess) error {
 }
 
 func alterSchema(d *dga.DGraphAccess) error {
-	return d.Fluent().AlterSchema(`
+	return d.Service().AlterSchema(`
 	name: string @index(exact) .
 	surname: string .
 	parent: uid .

@@ -148,7 +148,7 @@ func (d *DGraphAccess) Do(o Operation) (hadEffect bool, err error) {
 	return o.Do(d)
 }
 
-// Fluent gives access to the fluent interface of DGraphAccess.
-func (d *DGraphAccess) Fluent() Fluent {
-	return Fluent{access: d}
+// Service gives access to the operations interface of DGraphAccess.
+func (d *DGraphAccess) Service() Service {
+	return Service{access: d}
 }

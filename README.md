@@ -26,7 +26,7 @@ This package was created to reduce the boilerplate code required to use the `raw
 - type Mutation to encapsulate a dgraph mutations that contains a list of RDF triples (NQuad values)
 - UpsertNode, CreateNode, CreateEdge, RunQuery, FindEquals model common dgraph operations
 - DgraphAccess can trace the queries, mutations and responses for debugging
-- DgraphAccess also provides a fluent interface for the operations
+- DgraphAccess also provides a Service interface for convenient use of the operations
 
 This repository also includes the [dggen tool](https://github.com/emicklei/dgraph-access/tree/master/cmd/dggen) that takes a dgraph schema to generate Go types from Dgraph types.
 
@@ -39,7 +39,7 @@ This repository also includes the [dggen tool](https://github.com/emicklei/dgrap
 ## quick look
 
     d := dga.NewDGraphAccess(yourDgraphClient).ForReadWrite()    
-    f := d.Fluent()
+    s := d.Service()
     err := f.Alterschema(`name: string @index(exact) .`)
     type Vegetable struct {
         dga.Node `json:",inline"
@@ -47,16 +47,16 @@ This repository also includes the [dggen tool](https://github.com/emicklei/dgrap
         Color string
     }
     v1 := &Vegetable{Name:"Carrot"}
-    err = f.CreateNode(v1)
+    err = s.CreateNode(v1)
 
     v2 := &Vegetable{Name:"Beet"}
-    err = f.CreateEdge(v1,"similarTo",v2)
+    err = s.CreateEdge(v1,"similarTo",v2)
 
     v3 := new(Vegetable)
-    err := f.FindEquals(v3,"name","Carrot")    
+    err := s.FindEquals(v3,"name","Carrot")    
 
     v2.Color = "darkred"
-    f.UpsertNode(v2,"name","Beet")
+    s.UpsertNode(v2,"name","Beet")
 
 ## examples
 

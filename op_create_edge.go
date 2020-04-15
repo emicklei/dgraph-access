@@ -24,7 +24,7 @@ func (c CreateEdge) Do(d *DGraphAccess) (created bool, fail error) {
 	}
 	// create subject if new Node
 	if c.Subject.GetUID().IsZero() {
-		if err := d.Fluent().CreateNode(c.Subject); err != nil {
+		if err := d.Service().CreateNode(c.Subject); err != nil {
 			return false, err
 		}
 	}
@@ -32,7 +32,7 @@ func (c CreateEdge) Do(d *DGraphAccess) (created bool, fail error) {
 	object := c.Object
 	if huid, ok := c.Object.(HasUID); ok {
 		if huid.GetUID().IsZero() {
-			if err := d.Fluent().CreateNode(huid); err != nil {
+			if err := d.Service().CreateNode(huid); err != nil {
 				return false, err
 			}
 		}

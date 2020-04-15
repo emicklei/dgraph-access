@@ -50,20 +50,20 @@ func main() {
 	d = d.ForReadOnly(ctx)
 
 	john := new(CloudIdentity)
-	if _, err := d.Fluent().FindEquals(john, "user", "john.doe"); err != nil {
+	if _, err := d.Service().FindEquals(john, "user", "john.doe"); err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("%#v", john)
 
 	pip := new(PermissionsInProject)
-	if _, err := d.Fluent().FindEquals(pip, "identity", john); err != nil {
+	if _, err := d.Service().FindEquals(pip, "identity", john); err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("(with node) %#v", pip)
 
 	{ // if you only have the uid of John
 		pip := new(PermissionsInProject)
-		if _, err := d.Fluent().FindEquals(pip, "identity", john.UID); err != nil {
+		if _, err := d.Service().FindEquals(pip, "identity", john.UID); err != nil {
 			log.Fatal(err)
 		}
 		log.Printf("(uid only) %#v", pip)
@@ -78,7 +78,7 @@ func main() {
 		}
 	  }`
 	data := map[string][]string{}
-	ok, err := d.Fluent().RunQuery(&data, query, "q")
+	ok, err := d.Service().RunQuery(&data, query, "q")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -96,7 +96,7 @@ func main() {
 		}
 	  }`
 	data2 := map[string]interface{}{}
-	ok, err = d.Fluent().RunQuery(&data2, query, "q")
+	ok, err = d.Service().RunQuery(&data2, query, "q")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -106,12 +106,12 @@ func main() {
 }
 
 func insertData(d *dga.DGraphAccess) error {
-	f := d.Fluent()
+	f := d.Service()
 	// serviceAcount(compute-default) has permission(role/editor) in project(my-project)
 	sa := &CloudIdentity{
 		ServiceAccount: "compute-default",
 	}
-	if err := d.Fluent().CreateNode(sa); err != nil {
+	if err := d.Service().CreateNode(sa); err != nil {
 		return err
 	}
 	fmt.Println("serviceAccount:", sa.UID)
@@ -163,7 +163,7 @@ func alterSchema(d *dga.DGraphAccess) error {
 	if err != nil {
 		return err
 	}
-	return d.Fluent().AlterSchema(string(content))
+	return d.Service().AlterSchema(string(content))
 }
 
 func newClient() *dgo.Dgraph {
