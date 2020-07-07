@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/emicklei/dgraph-access.png)](https://travis-ci.org/emicklei/dgraph-access)
 [![Go Report Card](https://goreportcard.com/badge/github.com/emicklei/dgraph-access)](https://goreportcard.com/report/github.com/emicklei/dgraph-access)
 [![GoDoc](https://godoc.org/github.com/emicklei/dgraph-access?status.svg)](https://pkg.go.dev/github.com/emicklei/dgraph-access?tab=doc)
+[![codecov](https://codecov.io/gh/emicklei/dgraph-access/branch/master/graph/badge.svg)](https://codecov.io/gh/emicklei/dgraph-access)
 
 This is a helper package to work with `github.com/dgraph-io/dgo` (v2), a Go client for accessing a DGraph cluster.
 See the examples folder for complete programs.
