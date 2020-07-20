@@ -14,5 +14,11 @@ func TestDeleteMutation(t *testing.T) {
 				Object:    1998},
 		},
 	}
-	t.Log(m.RDF())
+	if got, want := m.RDF(), `{
+	delete {
+		<0xf11168064b01135b> <died> "1998" .
+	}
+}`; got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
 }

@@ -26,7 +26,10 @@ func TestEmbeddedNode(t *testing.T) {
 	if err := enc.Encode(k); err != nil {
 		t.Fatal(err)
 	}
-	t.Log(string(buf.Bytes()))
+	if got, want := buf.String(), `{"uid":"<0x2a>","dgraph.type":["Task"],"Name":""}
+`; got != want {
+		t.Errorf("got [%v:%T] want [%v:%T]", got, got, want, want)
+	}
 	m := Task{}
 	if err := json.NewDecoder(bytes.NewReader(buf.Bytes())).Decode(&m); err != nil {
 		t.Fatal(err)

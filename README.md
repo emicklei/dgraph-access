@@ -16,7 +16,6 @@ This package is under development (see commits); the API and scope may change be
 
 This package was created to reduce the boilerplate code required to use the `raw` dgraph Go client.
 
-
 ## features
 
 `dgraph-access` adds the following features to the standard Go client:
@@ -43,7 +42,7 @@ This repository also includes the [dggen tool](https://github.com/emicklei/dgrap
     s := d.Service()
     err := s.Alterschema(`name: string @index(exact) .`)
     type Vegetable struct {
-        dga.Node `json:",inline"
+        dga.Node `json:",inline" // this is for UID and Type propagation
         Name string
         Color string
     }
