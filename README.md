@@ -64,4 +64,4 @@ See [examples](https://github.com/emicklei/dgraph-access/blob/master/examples).
 
 See [documented code examples](https://godoc.org/github.com/emicklei/dgraph-access)
 
-© 2019-2020, [ernestmicklei.com](http://ernestmicklei.com).  MIT License. Contributions welcome.
+© 2019+, [ernestmicklei.com](http://ernestmicklei.com).  MIT License. Contributions welcome.
